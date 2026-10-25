@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet} from 'react-router-dom';
+import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet,useLocation} from 'react-router-dom';
 import {api,getUser,tgl,slug} from './api.js';
 
 const KAT=['Jalan','Jembatan','Drainase','Penerangan','Fasilitas Umum','Lainnya'];
@@ -48,9 +48,17 @@ function Login(){
    <div className="banner" style={{fontSize:13,marginBottom:0}}>🛡 Layanan ini tersedia untuk seluruh masyarakat demi infrastruktur yang lebih baik.</div></form></div>}
 
 function Layout(){
- const u=getUser(),nav=useNavigate(),[n,setN]=useState(0),[dark,setDark]=useState(()=>localStorage.getItem('theme')==='dark');
+ const u=getUser(),nav=useNavigate(),loc=useLocation(),[n,setN]=useState(0),[dark,setDark]=useState(()=>localStorage.getItem('theme')==='dark');
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark);localStorage.setItem('theme',dark?'dark':'light')},[dark]);
- useEffect(()=>{api('/notifications').then(d=>setN(d.filter(x=>!x.dibaca).length)).catch(()=>{})},[]);
+ useEffect(()=>{
+   const fetchNotif=async()=>{
+     try{const d=await api('/notifications');setN(d.filter(x=>!x.dibaca).length)}catch(_){}
+   };
+   fetchNotif();
+   const onRefresh=()=>fetchNotif();
+   window.addEventListener('notif:refresh',onRefresh);
+   return()=>window.removeEventListener('notif:refresh',onRefresh);
+ },[loc]);
  if(!u)return<Navigate to="/login"/>;
  const out=()=>{localStorage.clear();nav('/')};
   const [menuOpen,setMenuOpen]=useState(false);
@@ -152,7 +160,7 @@ function Buat(){
  const set=k=>v=>setF({...f,[k]:v.target.value});
  const submit=async()=>{setE('');if(!foto)return setE('Foto / bukti kerusakan wajib diunggah');setBusy(true);
   const fd=new FormData();Object.entries(f).forEach(([k,v])=>fd.append(k,v));fd.append('foto',foto);
-  try{const c=await api('/complaints',{method:'POST',form:fd});nav('/app/sukses/'+c.kode)}catch(x){setE(x.message)}setBusy(false)};
+  try{const c=await api('/complaints',{method:'POST',form:fd});window.dispatchEvent(new Event('notif:refresh'));nav('/app/sukses/'+c.kode)}catch(x){setE(x.message)}setBusy(false)};
  return<div className="grid2"><div className="card"><Link to="/app" style={{color:'var(--b)'}}>← Kembali</Link><h2 style={{margin:'8px 0'}}>📢 Form Pengaduan</h2><p className="mu">Sampaikan laporan kerusakan infrastruktur dengan lengkap dan jelas.</p>
   <div className="row2"><div><label>Judul Pengaduan *</label><input className="in" placeholder="Contoh: Jalan Berlubang di Jl. Melati" value={f.judul} onChange={set('judul')}/></div>
   <div><label>Kategori *</label><select className="in" value={f.kategori} onChange={set('kategori')}><option value="">Pilih kategori</option>{KAT.map(k=><option key={k}>{k}</option>)}</select></div></div>
@@ -204,7 +212,7 @@ function Notif(){
  return<div className="grid2"><div className="stk"><div className="banner"><h2>🔔 Notifikasi</h2><p>Pantau informasi terbaru seputar pengaduan Anda.</p></div>
   <div className="tabs">{T.map(t=><button key={t} className={tab===t?'on':''} onClick={()=>setTab(t)}>{t}{t==='Semua'&&un>0?` (${un})`:''}</button>)}</div>
   <div className="card" style={{padding:0}}>{v.map(r=><div key={r.id} className={'nt'+(r.dibaca?'':' un')}><span className="ic">{r.dibaca?'○':'●'}</span><div><b>{r.judul}</b><span className="mu">{r.isi}</span></div><span className="mu">{tgl(r.created_at)}</span></div>)}{!v.length&&<p className="mu" style={{padding:20}}>Tidak ada notifikasi.</p>}
-  <div className="nt"><span className="mu" style={{flex:1}}>Menampilkan {v.length} dari {rows.length} notifikasi</span><button className="btn s" onClick={()=>api('/notifications/read-all',{method:'POST'}).then(load)}>✔ Tandai Semua Dibaca</button></div></div></div>
+  <div className="nt"><span className="mu" style={{flex:1}}>Menampilkan {v.length} dari {rows.length} notifikasi</span><button className="btn s" onClick={()=>api('/notifications/read-all',{method:'POST'}).then(()=>{load();window.dispatchEvent(new Event('notif:refresh'));})}>✔ Tandai Semua Dibaca</button></div></div></div>
   <div className="card"><h3>Ringkasan Notifikasi</h3><p>Belum Dibaca: <b>{un}</b></p>{T.slice(1).map(t=><p key={t}>{t}: <b>{rows.filter(r=>r.tipe===t).length}</b></p>)}</div></div>}
 
 function Kelola(){
