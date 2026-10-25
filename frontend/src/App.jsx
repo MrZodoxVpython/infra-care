@@ -228,16 +228,22 @@ function Kelola(){
 
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
 const Profil=()=>{
- const u=getUser(),[rows,setRows]=useState([]),[loading,setLoading]=useState(true);
+ const u=getUser(),[rows,setRows]=useState([]),[loading,setLoading]=useState(true),[err,setErr]=useState('');
+ if(!u)return<Navigate to="/login"/>;
  const m=u.role==='masyarakat';
+ useEffect(()=>{
+  let mounted=true;
+  (async()=>{
+   try{const d=await api('/complaints');if(mounted)setRows(d)}catch(e){if(mounted)setErr(e.message||'Gagal memuat data')}finally{if(mounted)setLoading(false)}
+  })();
+  return()=>{mounted=false};
+ },[]);
+ if(loading)return<div className="card" style={{textAlign:'center',padding:40}}>Memuat profil...</div>;
+ if(err)return<div className="card" style={{textAlign:'center',padding:40,color:'#ef4444'}}>{err}</div>;
  const total=rows.length;
  const selesai=rows.filter(r=>r.status==='Selesai').length;
  const proses=rows.filter(r=>r.status!=='Selesai'&&r.status!=='Ditolak').length;
  const ditolak=rows.filter(r=>r.status==='Ditolak').length;
- useEffect(()=>{
-  api('/complaints').then(setRows).finally(()=>setLoading(false));
- },[]);
- if(loading)return<div className="card" style={{textAlign:'center',padding:40}}>Memuat profil...</div>;
  const roleColor=m?'#1565d8':u.role==='admin'?'#ef4444':'#f59e0b';
  const roleLabel=m?'Masyarakat':u.role==='admin'?'Admin Pemerintah':'Petugas Lapangan';
  return<>
@@ -264,10 +270,10 @@ const Profil=()=>{
     <div className="prof-item-left">
      <img src={r.foto||'https://via.placeholder.com/32x32?color=ddd'} width="32" height="32" className="prof-item-img"/>
      <div>
-      <b>{r.judul}</b><br/><span className="mu">{r.kode} • {r.kategori}</span>
+      <b>{r.judul}</b><br/><span className="mu">{r.kode||'-'} • {r.kategori||'-'}</span>
      </div>
     </div>
-    <St s={r.status} dark={document.documentElement.classList.contains('dark')}/>
+    <St s={r.status||'-'} dark={document.documentElement.classList.contains('dark')}/>
    </div>))}
    {!rows.length&&<p className="mu" style={{textAlign:'center',padding:24}}>Belum ada pengaduan.</p>}
    {rows.length>5&&<p className="mu" style={{textAlign:'center',fontSize:12,marginTop:8}}>Lihat semua di menu Riwayat.</p>}
@@ -282,5 +288,5 @@ export default function App(){return<Routes>
   <Route path="buat" element={<Guard roles={['masyarakat']}><Buat/></Guard>}/><Route path="sukses/:kode" element={<Sukses/>}/>
   <Route path="tracking" element={<Tracking/>}/><Route path="tracking/:kode" element={<Tracking/>}/>
   <Route path="riwayat" element={<Riwayat/>}/><Route path="notifikasi" element={<Notif/>}/>
-  <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
+  <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Guard roles={['masyarakat','admin','petugas']}><Profil/></Guard>}/><Route path="*" element={<Soon/>}/></Route>
  <Route path="*" element={<Navigate to="/"/>}/></Routes>}
