@@ -22,13 +22,12 @@ function Landing(){
   <div className="hero"><div><span className="pill">📢 Sistem Pengaduan Infrastruktur Publik</span>
    <h1>Laporkan Infrastruktur Rusak, <span>Wujudkan Lingkungan Lebih Baik</span></h1>
    <p>Sampaikan pengaduan kerusakan infrastruktur publik dengan mudah, cepat, dan transparan.</p>
-   <div style={{display:'flex',gap:14,marginTop:22}}><Link className="btn" to={u?'/app/buat':'/login'}>✈ Buat Pengaduan</Link><Link className="btn o" to={u?'/app/tracking':'/login'}>🔍 Lacak Pengaduan</Link></div></div>
-</div>
+   <div style={{display:'flex',gap:14,marginTop:22}}><Link className="btn" to={u?'/app/buat':'/login'}>✈ Buat Pengaduan</Link><Link className="btn o" to={u?'/app/tracking':'/login'}>🔍 Lacak Pengaduan</Link></div></div></div>
   <section id="cara" style={{padding:'40px 20px'}}>
    <div style={{maxWidth:1000,margin:'0 auto',textAlign:'center'}}>
     <h2 style={{marginBottom:10}}>Cara Kerja</h2>
     <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Laporan Anda diproses secara transparan dari mulai hingga selesai.</p>
-    <div style={{display:grid,gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20}}>
      <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:24,textAlign:'center'}}>
       <div style={{fontSize:32,marginBottom:12}}>📝</div>
       <h3 style={{marginBottom:8}}>Buat Pengaduan</h3>
@@ -70,7 +69,7 @@ function Landing(){
    <div style={{maxWidth:800,margin:'0 auto',textAlign:'center'}}>
     <h2 style={{marginBottom:10}}>Bantuan</h2>
     <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Butuh bantuan? Kami siap membantu Anda.</p>
-    <div style={{display:grid,gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20,textAlign:'left'}}>
+    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20,textAlign:'left'}}>
      <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:20}}>
       <div style={{fontSize:28,marginBottom:10}}>📧</div>
       <h3 style={{marginBottom:6}}>Email Support</h3>
