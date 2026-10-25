@@ -24,12 +24,72 @@ function Landing(){
    <p>Sampaikan pengaduan kerusakan infrastruktur publik dengan mudah, cepat, dan transparan.</p>
    <div style={{display:'flex',gap:14,marginTop:22}}><Link className="btn" to={u?'/app/buat':'/login'}>✈ Buat Pengaduan</Link><Link className="btn o" to={u?'/app/tracking':'/login'}>🔍 Lacak Pengaduan</Link></div></div>
 </div>
-  <div className="stats4" id="cara">
+  <section id="cara" style={{padding:'40px 20px'}}>
+   <div style={{maxWidth:1000,margin:'0 auto',textAlign:'center'}}>
+    <h2 style={{marginBottom:10}}>Cara Kerja</h2>
+    <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Laporan Anda diproses secara transparan dari mulai hingga selesai.</p>
+    <div style={{display:grid,gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20}}>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:24,textAlign:'center'}}>
+      <div style={{fontSize:32,marginBottom:12}}>📝</div>
+      <h3 style={{marginBottom:8}}>Buat Pengaduan</h3>
+      <p style={{fontSize:14,opacity:0.8}}>Isi formulir laporan dengan judul, kategori, lokasi, dan foto bukti kerusakan.</p>
+     </div>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:24,textAlign:'center'}}>
+      <div style={{fontSize:32,marginBottom:12}}>🔍</div>
+      <h3 style={{marginBottom:8}}>Verifikasi &amp; Diproses</h3>
+      <p style={{fontSize:14,opacity:0.8}}>Tim admin memverifikasi laporan dan menugaskan petugas lapangan.</p>
+     </div>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:24,textAlign:'center'}}>
+      <div style={{fontSize:32,marginBottom:12}}>✅</div>
+      <h3 style={{marginBottom:8}}>Selesai &amp; Diobservasi</h3>
+      <p style={{fontSize:14,opacity:0.8}}>Pekerjaan perbaikan diselesaikan dan status diperbarui menjadi Selesai.</p>
+     </div>
+    </div>
+   </div>
+  </section>
+  <div className="stats4" id="stats">
    <div><b>{s.total.toLocaleString('id-ID')}+</b>Total Pengaduan<p className="mu">Laporan dari seluruh masyarakat</p></div>
    <div><b>{s.selesai}</b>Selesai<p className="mu">Pengaduan yang telah ditangani</p></div>
    <div><b>{s.proses}</b>Sedang Diproses<p className="mu">Dalam tahap penanganan</p></div>
-   <div><b>95%</b>Tingkat Kepuasan<p className="mu">Dari masyarakat pengguna</p></div></div>
-</div>}
+   <div><b>95%</b>Tingkat Kepuasan<p className="mu">Dari masyarakat pengguna</p></div>
+  </div>
+  <section id="tentang" style={{padding:'40px 20px'}}>
+   <div style={{maxWidth:1000,margin:'0 auto',display:'flex',gap:40,flexWrap:'wrap',alignItems:'center'}}>
+    <div style={{flex:1,minWidth:280}}>
+     <h2 style={{marginBottom:12}}>Tentang INFRA-CARE</h2>
+     <p style={{marginBottom:16,fontSize:14,lineHeight:1.6,opacity:0.8}}>INFRA-CARE adalah sistem pengaduan infrastruktur publik yang memudahkan masyarakat melaporkan kerusakan jalan, drainase, penerangan, dan fasilitas umum secara digital.</p>
+     <p style={{marginBottom:16,fontSize:14,lineHeight:1.6,opacity:0.8}}>Dengan INFRA-CARE, setiap laporan dapat dipantau secara real-time, dan pemerintah dapat menindaklanjuti kerusakan infrastruktur dengan lebih cepat dan terstruktur.</p>
+    </div>
+    <div style={{flex:1,minWidth:280,background:'#f1f5f9',borderRadius:16,padding:24,textAlign:'center'}}>
+     <div style={{fontSize:48}}>🏗</div>
+     <p style={{fontSize:14,opacity:0.8,marginTop:12}}>Bersama Jaga Infrastruktur untuk Masa Depan</p>
+    </div>
+   </div>
+  </section>
+  <section id="bantuan" style={{padding:'40px 20px'}}>
+   <div style={{maxWidth:800,margin:'0 auto',textAlign:'center'}}>
+    <h2 style={{marginBottom:10}}>Bantuan</h2>
+    <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Butuh bantuan? Kami siap membantu Anda.</p>
+    <div style={{display:grid,gridTemplateColumns:'repeat(auto-fit,minmax(250px,1fr))',gap:20,textAlign:'left'}}>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:20}}>
+      <div style={{fontSize:28,marginBottom:10}}>📧</div>
+      <h3 style={{marginBottom:6}}>Email Support</h3>
+      <p style={{fontSize:14,opacity:0.8}}>support@infracare.id</p>
+     </div>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:20}}>
+      <div style={{fontSize:28,marginBottom:10}}>📞</div>
+      <h3 style={{marginBottom:6}}>Telepon</h3>
+      <p style={{fontSize:14,opacity:0.8}}>0800-123-4567</p>
+     </div>
+     <div style={{border:'1px solid #edf3fb',borderRadius:16,padding:20}}>
+      <div style={{fontSize:28,marginBottom:10}}>❓</div>
+      <h3 style={{marginBottom:6}}>FAQ</h3>
+      <p style={{fontSize:14,opacity:0.8}}>Pertanyaan seputar pengaduan bisa diakses di menu Notifikasi &amp; Riwayat.</p>
+     </div>
+    </div>
+   </div>
+  </section>
+ </div>}
 
 function Login(){
  const nav=useNavigate(),[reg,setReg]=useState(false),[f,setF]=useState({nama:'',email:'',password:''}),[e,setE]=useState(''),[show,setShow]=useState(false);
