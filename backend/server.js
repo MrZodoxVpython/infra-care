@@ -25,12 +25,20 @@ if (!DATABASE_URL) {
 
 // Pool PostgreSQL yang aman untuk lingkungan serverless Vercel.
 // max kecil agar tidak melebihi limit koneksi Supabase connection pooler.
-const pool = new Pool({
+// Aktifkan SSL dengan rejectUnauthorized false di produksi (Vercel) untuk
+// mengatasi error self-signed certificate dari Supabase connection pooler.
+const pgConfig = {
   connectionString: DATABASE_URL,
   max: 5,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,
-});
+};
+
+if (process.env.NODE_ENV === 'production') {
+  pgConfig.ssl = { rejectUnauthorized: false };
+}
+
+const pool = new Pool(pgConfig);
 
 // Tangani error pool agar tidak crash proses serverless saat jaringan terputus sesaat.
 pool.on('error', (err) => {
