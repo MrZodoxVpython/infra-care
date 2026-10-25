@@ -12,18 +12,17 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 
-// Ambil DATABASE_URL dari Vercel / integrasi Supabase.
-// Dukung baik DATABASE_URL maupun POSTGRES_URL; JANGAN pernah fallback ke localhost.
-const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+let DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
 if (!DATABASE_URL) {
-  throw new Error(
-    'DATABASE_URL (atau POSTGRES_URL) belum diatur di Vercel Environment Variables. ' +
-    'Pastikan integrasi Supabase terhubung dan variabel tersedia di dasbor Vercel.'
-  );
+  throw new Error('DATABASE_URL belum diatur di Vercel Environment Variables.');
 }
 
-// Buat objek opsi konfigurasi Pool
+// Bersihkan parameter sslmode dari string URL agar tidak menimpa konfigurasi objek kita
+if (DATABASE_URL.includes('sslmode=')) {
+  DATABASE_URL = DATABASE_URL.replace(/[\?&]sslmode=[^&]*/g, '');
+}
+
 const poolOptions = {
   connectionString: DATABASE_URL,
   max: 5,
@@ -31,8 +30,8 @@ const poolOptions = {
   idleTimeoutMillis: 30000,
 };
 
-// Jika di produksi (Vercel), atur SSL secara eksplisit untuk mengatasi SELF_SIGNED_CERT_IN_CHAIN
-if (process.env.NODE_ENV === 'production') {
+// Paksa penonaktifan validasi sertifikat secara mutlak di Vercel Production
+if (process.env.NODE_ENV === 'production' || !DATABASE_URL.includes('localhost')) {
   poolOptions.ssl = {
     rejectUnauthorized: false
   };
