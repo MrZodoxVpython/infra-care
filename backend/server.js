@@ -1,8 +1,46 @@
-require('dotenv').config();
-const express=require('express'),cors=require('cors'),{Pool}=require('pg'),bcrypt=require('bcryptjs'),jwt=require('jsonwebtoken'),multer=require('multer'),path=require('path');
-const pool=new Pool({connectionString:process.env.DATABASE_URL}),app=express(),SECRET=process.env.JWT_SECRET||'infra-care-dev';
-const STATUS=['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai','Ditolak'];
-const up=multer({dest:path.join(__dirname,'uploads'),limits:{fileSize:5*1024*1024}});
+// Hanya muat .env di development lokal. Di Vercel, Environment Variables
+// diambil langsung dari dasbor; jangan bergantung pada file .env di produksi.
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+const express = require('express');
+const cors = require('cors');
+const { Pool } = require('pg');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+
+// Ambil DATABASE_URL dari Vercel / integrasi Supabase.
+// Dukung baik DATABASE_URL maupun POSTGRES_URL; JANGAN pernah fallback ke localhost.
+const DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+if (!DATABASE_URL) {
+  throw new Error(
+    'DATABASE_URL (atau POSTGRES_URL) belum diatur di Vercel Environment Variables. ' +
+    'Pastikan integrasi Supabase terhubung dan variabel tersedia di dasbor Vercel.'
+  );
+}
+
+// Pool PostgreSQL yang aman untuk lingkungan serverless Vercel.
+// max kecil agar tidak melebihi limit koneksi Supabase connection pooler.
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  max: 5,
+  connectionTimeoutMillis: 5000,
+  idleTimeoutMillis: 30000,
+});
+
+// Tangani error pool agar tidak crash proses serverless saat jaringan terputus sesaat.
+pool.on('error', (err) => {
+  console.error('PostgreSQL pool error:', err.message);
+});
+
+const app = express();
+const SECRET = process.env.JWT_SECRET || 'infra-care-dev';
+const STATUS = ['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai','Ditolak'];
+const up = multer({ dest: path.join(__dirname, 'uploads'), limits: { fileSize: 5 * 1024 * 1024 } });
 app.use(cors(),express.json());app.use('/uploads',express.static(path.join(__dirname,'uploads')));
 const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
 const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error(e);res.status(500).json({message:'Terjadi kesalahan server'})});
