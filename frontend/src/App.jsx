@@ -227,7 +227,52 @@ function Kelola(){
   <Table rows={rows} admin onChange={change} dark={dark}/><p className="mu">Menampilkan {rows.length} data pengaduan</p></div></>}
 
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
-const Profil=()=>{const u=getUser();return<div className="card"><h2>👤 Profil</h2><p><b>{u.nama}</b><br/>{u.email}<br/>{ROLE[u.role]}</p></div>};
+const Profil=()=>{
+ const u=getUser(),[rows,setRows]=useState([]),[loading,setLoading]=useState(true);
+ const m=u.role==='masyarakat';
+ const total=rows.length;
+ const selesai=rows.filter(r=>r.status==='Selesai').length;
+ const proses=rows.filter(r=>r.status!=='Selesai'&&r.status!=='Ditolak').length;
+ const ditolak=rows.filter(r=>r.status==='Ditolak').length;
+ useEffect(()=>{
+  api('/complaints').then(setRows).finally(()=>setLoading(false));
+ },[]);
+ if(loading)return<div className="card" style={{textAlign:'center',padding:40}}>Memuat profil...</div>;
+ const roleColor=m?'#1565d8':u.role==='admin'?'#ef4444':'#f59e0b';
+ const roleLabel=m?'Masyarakat':u.role==='admin'?'Admin Pemerintah':'Petugas Lapangan';
+ return<>
+  <div className="card prof-header">
+   <div className="prof-avatar" style={{background:roleColor+'20',color:roleColor}}>{u.nama[0]}</div>
+   <div>
+    <h2 style={{margin:0}}>{u.nama}</h2>
+    <div style={{display:flex,alignItems:'center',gap:10,marginTop:4,flexWrap:'wrap'}}>
+     <span className="prof-badge" style={{background:roleColor+'15',color:roleColor,borderColor:roleColor+'40'}}>{roleLabel}</span>
+     <span className="prof-id">• ID: {u.id}</span>
+    </div>
+    <p className="prof-email">{u.email}</p>
+   </div>
+  </div>
+  <div className="prof-stats">
+   <div className="prof-stat"><span className="mu">Total Pengaduan</span><b>{total}</b></div>
+   <div className="prof-stat"><span className="mu">Selesai</span><b style={{color:'#22c55e'}}>{selesai}</b></div>
+   <div className="prof-stat"><span className="mu">Diproses</span><b style={{color:'#f59e0b'}}>{proses}</b></div>
+   <div className="prof-stat"><span className="mu">Ditolak</span><b style={{color:'#ef4444'}}>{ditolak}</b></div>
+  </div>
+  <div className="prof-recent">
+   <h3>Pengaduan Terkini</h3>
+   {rows.slice(0,5).map(r=>(<div key={r.id} className="prof-item">
+    <div className="prof-item-left">
+     <img src={r.foto||'https://via.placeholder.com/32x32?color=ddd'} width="32" height="32" className="prof-item-img"/>
+     <div>
+      <b>{r.judul}</b><br/><span className="mu">{r.kode} • {r.kategori}</span>
+     </div>
+    </div>
+    <St s={r.status} dark={document.documentElement.classList.contains('dark')}/>
+   </div>))}
+   {!rows.length&&<p className="mu" style={{textAlign:'center',padding:24}}>Belum ada pengaduan.</p>}
+   {rows.length>5&&<p className="mu" style={{textAlign:'center',fontSize:12,marginTop:8}}>Lihat semua di menu Riwayat.</p>}
+  </div>
+ </>};
 const Home=()=>{const u=getUser();return u.role==='masyarakat'||true?<Dashboard/>:null};
 const Guard=({roles,children})=>roles.includes(getUser()?.role)?children:<Navigate to="/app"/>;
 
