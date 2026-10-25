@@ -12,26 +12,27 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 
-let DATABASE_URL = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+const rawDatabaseUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
 
-if (!DATABASE_URL) {
-  throw new Error('DATABASE_URL belum diatur di Vercel Environment Variables.');
+if (!rawDatabaseUrl) {
+  throw new Error('DATABASE_URL or POSTGRES_URL is missing from Vercel Environment Variables.');
 }
 
-// Bersihkan parameter sslmode dari string URL agar tidak menimpa konfigurasi objek kita
-if (DATABASE_URL.includes('sslmode=')) {
-  DATABASE_URL = DATABASE_URL.replace(/[\?&]sslmode=[^&]*/g, '');
-}
+// Safely parse the connection string using the native URL Web API
+const dbUrl = new URL(rawDatabaseUrl);
+
+// Remove any pre-existing sslmode query parameters that override our configuration
+dbUrl.searchParams.delete('sslmode');
 
 const poolOptions = {
-  connectionString: DATABASE_URL,
+  connectionString: dbUrl.toString(),
   max: 5,
   connectionTimeoutMillis: 5000,
   idleTimeoutMillis: 30000,
 };
 
-// Paksa penonaktifan validasi sertifikat secara mutlak di Vercel Production
-if (process.env.NODE_ENV === 'production' || !DATABASE_URL.includes('localhost')) {
+// Enforce non-strict SSL certification validation inside Vercel Serverless production
+if (process.env.NODE_ENV === 'production' || !rawDatabaseUrl.includes('localhost')) {
   poolOptions.ssl = {
     rejectUnauthorized: false
   };
