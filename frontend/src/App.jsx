@@ -69,9 +69,9 @@ function Layout(){
 
 function Table({rows,admin,onChange,compact,dark}){
  if(compact){
-  return<table className="t-compact"><thead><tr><th></th><th>Judul Pengaduan</th><th style={{textAlign:'right'}}>Tanggal</th><th style={{textAlign:'right'}}>Status</th></tr></thead><tbody>
+  return<table className="t-compact"><thead><tr><th>Judul Pengaduan</th><th style={{textAlign:'right'}}>Tanggal</th><th style={{textAlign:'right'}}>Status</th></tr></thead><tbody>
   {rows.map((r,i)=><tr key={r.id}><td className="t-img"><img src={r.foto||'https://via.placeholder.com/40x40?color=ddd'} width="40" height="40" style={{borderRadius:8,objectFit:'cover'}}/><div><b style={{fontSize:13,display:'block'}}>{r.judul}</b><span className="mu" style={{fontSize:12,display:'block'}}>{r.kategori} · {r.lokasi}</span></div></td><td style={{textAlign:'right'}}><span className="mu" style={{fontSize:12}}>{tgl(r.created_at)}</span></td><td style={{textAlign:'right'}}><St s={r.status} dark={dark}/></td></tr>)}
-  {!rows.length&&<tr><td colSpan="4" className="mu" style={{textAlign:'center'}}>Belum ada data pengaduan.</td></tr>}
+  {!rows.length&&<tr><td colSpan="3" className="mu" style={{textAlign:'center'}}>Belum ada data pengaduan.</td></tr>}
   </tbody></table>}
  const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#f1f5f9';
  return<table style={{background:tBg,color:tTxt,border:'1px solid '+tBorder,borderRadius:12}}><thead><tr><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>No.</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Tanggal</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Judul Pengaduan</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Kategori</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Lokasi</th>{admin&&<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Pelapor</th>}<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Status</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Aksi</th></tr></thead><tbody>
