@@ -1,6 +1,8 @@
 import React,{useEffect,useState} from 'react';
 import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet,useLocation} from 'react-router-dom';
 import {api,getUser,tgl,slug} from './api.js';
+import {MapContainer,TileLayer,Marker,Popup,useMap} from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const KAT=['Jalan','Jembatan','Drainase','Penerangan','Fasilitas Umum','Lainnya'];
 const STATUS=['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai','Ditolak'];
@@ -217,20 +219,30 @@ function Dashboard(){
  </>}
 
 function Buat(){
- const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:'',lng:'',urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
+ const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:-6.2088,lng:106.8456,urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
+ const [mapCenter,setMapCenter]=useState([-6.2088,106.8456]);
+ const [markerPos,setMarkerPos]=useState([-6.2088,106.8456]);
+ const [searchResults,setSearchResults]=useState([]);
+ const [searchQuery,setSearchQuery]=useState('');
  const set=k=>v=>setF({...f,[k]:v.target.value});
  const compressImage=(file,maxSide=1280,quality=0.75)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gambar tidak dapat dibaca'))};img.src=url});
- const submit=async()=>{setE('');if(!foto)return setE('Foto / bukti kerusakan wajib diunggah');if(foto.size>5*1024*1024)return setE('Ukuran foto maksimal 5MB');setBusy(true);
-  try{const foto64=await compressImage(foto);const c=await api('/complaints',{method:'POST',body:{...f,foto:foto64}});window.dispatchEvent(new Event('notif:refresh'));nav('/app/sukses/'+c.kode)}catch(x){setE(x.message)}setBusy(false)};
+ const searchLocation=async()=>{if(!searchQuery.trim())return;try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(searchQuery)}+Indonesia`,{headers:{'User-Agent':'INFRA-CARE/1.0'}});const d=await r.json();setSearchResults(d.map(x=>({label:x.display_name,lat:parseFloat(x.lat),lng:parseFloat(x.lon)})));}catch{setSearchResults([])}};
+ const selectLoc=loc=>{setSearchQuery(loc.label);setF({...f,lokasi:loc.label});setMapCenter([loc.lat,loc.lng]);setMarkerPos([loc.lat,loc.lng]);setF({...f,lat:loc.lat,lng:loc.lng});setSearchResults([])};
+ const onMapClick=e=>{setMarkerPos([e.latlng.lat,e.latlng.lng]);setMapCenter([e.latlng.lat,e.latlng.lng]);setF({...f,lat:e.latlng.lat,lng:e.latlng.lng})};
+ const submit=async()=>{setE('');if(!foto)return setE('Foto / bukti kerusakan wajib diunggah');if(foto.size>5*1024*1024)return setE('Ukuran foto maksimal 5MB');setBusy(true);try{const foto64=await compressImage(foto);const c=await api('/complaints',{method:'POST',body:{...f,foto:foto64}});window.dispatchEvent(new Event('notif:refresh'));nav('/app/sukses/'+c.kode)}catch(x){setE(x.message)}setBusy(false)};
  return<div className="grid2"><div className="card"><Link to="/app" style={{color:'var(--b)'}}>← Kembali</Link><h2 style={{margin:'8px 0'}}>📢 Form Pengaduan</h2><p className="mu">Sampaikan laporan kerusakan infrastruktur dengan lengkap dan jelas.</p>
   <div className="row2"><div><label>Judul Pengaduan *</label><input className="in" placeholder="Contoh: Jalan Berlubang di Jl. Melati" value={f.judul} onChange={set('judul')}/></div>
   <div><label>Kategori *</label><select className="in" value={f.kategori} onChange={set('kategori')}><option value="">Pilih kategori</option>{KAT.map(k=><option key={k}>{k}</option>)}</select></div></div>
   <label>Deskripsi *</label><textarea className="in" rows="5" maxLength="500" placeholder="Jelaskan kondisi kerusakan secara detail..." value={f.deskripsi} onChange={set('deskripsi')}/><div className="mu" style={{textAlign:'right'}}>{f.deskripsi.length}/500</div>
   <div className="row2"><div><label>Foto / Bukti Kerusakan *</label><label className="in" style={{textAlign:'center',borderStyle:'dashed',cursor:'pointer',padding:30}}>☁ {foto?foto.name:'Klik untuk mengunggah foto'}<br/><span className="mu">Format: JPG, PNG (Maks. 5MB)</span><input type="file" accept="image/png,image/jpeg" hidden onChange={x=>setFoto(x.target.files[0])}/></label></div>
-  <div><label>Lokasi *</label><input className="in" placeholder="Alamat / lokasi kerusakan" value={f.lokasi} onChange={set('lokasi')}/><div className="row2" style={{marginTop:8}}><input className="in" placeholder="Latitude" value={f.lat} onChange={set('lat')}/><input className="in" placeholder="Longitude" value={f.lng} onChange={set('lng')}/></div></div></div>
+  <div style={{marginTop:14}}><label style={{fontWeight:700,fontSize:14,marginBottom:6,display:'block'}}>📍 Lokasi Kerusakan *</label>
+   <div style={{display:'flex',gap:8,marginBottom:8}}><input className="in" style={{flex:1}} placeholder="Cari desa, jalan, atau alamat..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&searchLocation()}/><button className="btn s" onClick={searchLocation}>Cari</button></div>
+   {searchResults.length>0&&<div style={{border:'1px solid #edf3fb',borderRadius:8,background:'#fff',maxHeight:200,overflowY:'auto',marginBottom:8}}>{searchResults.map((r,i)=><div key={i} style={{padding:8,cursor:'pointer',borderBottom:i<searchResults.length-1?'1px solid #f1f5f9':'none',fontSize:13}} onClick={()=>selectLoc(r)}><b>{r.label}</b><br/><span className="mu" style={{fontSize:11}}>Lat: {r.lat.toFixed(4)}, Lng: {r.lng.toFixed(4)}</span></div>)}</div>}
+   <div style={{height:300,border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',position:'relative',marginBottom:8}}><MapContainer center={mapCenter} zoom={15} style={{height:'100%',width:'100%'}} onClick={onMapClick}><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/><Marker position={markerPos} draggable onDragEnd={e=>{const p=e.target.getLatLng();setMarkerPos([p.lat,p.lng]);setMapCenter([p.lat,p.lng]);setF({...f,lat:p.lat,lng:p.lng})}}><Popup>Titik lokasi pengaduan</Popup></Marker></MapContainer></div>
+   <div className="mu" style={{textAlign:'center',fontSize:12}}>Titik terpilih: {markerPos[0].toFixed(6)}, {markerPos[1].toFixed(6)}</div>
+  </div>
   <label>Tingkat Urgensi *</label><div className="urg">{[['Tinggi','Butuh penanganan segera'],['Sedang','Mengganggu aktivitas masyarakat'],['Rendah','Kerusakan ringan']].map(([u,d])=><div key={u} className={'tag '+u.toLowerCase()+(f.urgensi===u?' on':'')} onClick={()=>setF({...f,urgensi:u})}><b>{u}</b>{d}</div>)}</div>
-  {e&&<div className="err">{e}</div>}<div style={{display:'flex',gap:12,marginTop:18,alignItems:'center'}}><span className="mu" style={{flex:1}}>ℹ Pastikan data yang Anda isi sudah benar agar pengaduan dapat diproses dengan cepat.</span><button className="btn" disabled={busy} onClick={submit}>✈ {busy?'Mengirim...':'Kirim Pengaduan'}</button></div></div>
-
+  {e&&<div className="err">{e}</div>}<div style={{display:'flex',gap:12,marginTop:18,alignItems:'center'}}><span className="mu" style={{flex:1}}>ℹ Pastikan data yang Anda isi sudah benar agar pengaduan dapat diproses dengan cepat.</span><button className="btn" disabled={busy} onClick={submit}>✈ {busy?'Mengirim...':'Kirim Pengaduan'}</button></div></div></div>
   <div className="stk"><img src="/stk-img.jpg" alt="Infrastruktur" className="stk-img"/><div className="card"><h3>Contoh Infrastruktur yang Dapat Dilaporkan</h3><div className="row2" style={{marginTop:12}}>{KAT.map(k=><span className="tag" key={k}>{k}</span>)}</div></div>
   <div className="card"><h3>💡 Tips Pengaduan</h3>{['Gunakan judul yang jelas dan spesifik.','Lengkapi deskripsi dengan detail kondisi kerusakan.','Lampirkan foto yang menunjukkan lokasi kerusakan.','Pastikan lokasi sudah sesuai dengan titik kejadian.','Pilih tingkat urgensi yang sesuai.'].map(t=><p key={t}>✅ {t}</p>)}</div></div></div>}
 
