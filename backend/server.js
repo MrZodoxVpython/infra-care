@@ -48,7 +48,7 @@ pool.on('error', (err) => {
 const app = express();
 const SECRET = process.env.JWT_SECRET || 'infra-care-dev';
 const STATUS = ['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai','Ditolak'];
-const up = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+const up = multer({ storage: multer.diskStorage({ destination: path.join(__dirname,'uploads'), filename: (req,file,cb)=>{ cb(null, Date.now()+'-'+file.originalname) } }), limits: { fileSize: 5 * 1024 * 1024 } });
 app.use(cors(),express.json());app.use('/uploads',express.static(path.join(__dirname,'uploads')));
 const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
 const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error(e);res.status(500).json({message:'Terjadi kesalahan server'})});
@@ -84,7 +84,7 @@ app.post('/api/complaints',auth(['masyarakat']),up.single('foto'),wrap(async(req
  if(!b.judul||!b.kategori||!b.deskripsi||!b.lokasi||!b.urgensi)return res.status(400).json({message:'Lengkapi semua data wajib'});
  const[{n}]=await q("select nextval('complaint_seq')::int n"),kode=`INF-${new Date().getFullYear()}-${String(n).padStart(5,'0')}`;
  const[c]=await q('insert into complaints(kode,judul,kategori,deskripsi,foto,lokasi,lat,lng,urgensi,user_id) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) returning *',
-  [kode,b.judul,b.kategori,b.deskripsi,null,b.lokasi,b.lat||null,b.lng||null,b.urgensi,req.user.id]);
+  [kode,b.judul,b.kategori,b.deskripsi,req.file?'/uploads/'+req.file.filename:null,b.lokasi,b.lat||null,b.lng||null,b.urgensi,req.user.id]);
  await q("insert into complaint_logs(complaint_id,status,catatan) values($1,'Diterima','Pengaduan diterima oleh sistem')",[c.id]);
  await q("insert into notifications(user_id,tipe,judul,isi) values($1,'Pengaduan','Pengaduan Diterima',$2)",[req.user.id,`Pengaduan Anda dengan nomor ${kode} telah diterima oleh sistem.`]);
  res.status(201).json(c)}));
