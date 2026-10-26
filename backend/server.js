@@ -51,7 +51,7 @@ const STATUS = ['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam P
 const up = multer({ storage: multer.diskStorage({ destination: path.join(__dirname,'uploads'), filename: (req,file,cb)=>{ cb(null, Date.now()+'-'+file.originalname) } }), limits: { fileSize: 5 * 1024 * 1024 } });
 app.use(cors(),express.json());app.use('/uploads',express.static(path.join(__dirname,'uploads')));
 const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
-const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error(e);res.status(500).json({message:'Terjadi kesalahan server'})});
+const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error('WRAP ERROR:',e.stack||e.message);res.status(500).json({message:'Terjadi kesalahan server: '+e.message})});
 const auth=roles=>(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),SECRET)}catch{return res.status(401).json({message:'Belum login'})}
  if(roles&&!roles.includes(req.user.role))return res.status(403).json({message:'Tidak diizinkan'});next()};
 const sign=u=>{const user={id:u.id,nama:u.nama,email:u.email,role:u.role};return{token:jwt.sign(user,SECRET,{expiresIn:'7d'}),user}};
@@ -98,6 +98,9 @@ app.patch('/api/complaints/:id/status',auth(['admin','petugas']),wrap(async(req,
 app.get('/api/notifications',auth(),wrap(async(req,res)=>res.json(await q('select * from notifications where user_id=$1 order by created_at desc',[req.user.id]))));
 app.post('/api/notifications/read-all',auth(),wrap(async(req,res)=>{await q('update notifications set dibaca=true where user_id=$1',[req.user.id]);res.json({ok:true})}));
 // Error handler untuk multer (file terlalu besar, field tidak valid, dst) dan error lain
-app.use((err,req,res,next)=>{console.error('Error:',err.message);if(err.code==='LIMIT_FILE_SIZE')return res.status(400).json({message:'File terlalu besar (maks. 5MB)'});if(err instanceof multer.MulterError)return res.status(400).json({message:'Error upload foto: '+err.message});res.status(500).json({message:'Terjadi kesalahan server'})});
+app.use((err,req,res,next)=>{console.error('ERROR:',err.stack||err.message);if(err.code==='LIMIT_FILE_SIZE')return res.status(400).json({message:'File terlalu besar (maks. 5MB)'});if(err instanceof multer.MulterError)return res.status(400).json({message:'Error upload foto: '+err.message});res.status(500).json({message:'Terjadi kesalahan server: '+err.message})});
+
+// 404 handler untuk route API yang tidak ditemukan (selalu JSON)
+app.use('/api',(req,res)=>res.status(404).json({message:'Endpoint tidak ditemukan'}));
 
 app.listen(process.env.PORT||4000,()=>console.log('INFRA-CARE API berjalan'));
