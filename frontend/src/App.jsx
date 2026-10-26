@@ -31,7 +31,7 @@ function Landing(){
     <div><b>95%</b>Tingkat Kepuasan<p className="mu">Dari masyarakat pengguna</p></div>
    </div>
 
-  <section id="cara" style={{padding:'40px 20px'}}>
+  <section id="cara" style={{padding:'40px 20px'}} className="full-screen">
    <div style={{maxWidth:1000,margin:'0 auto',textAlign:'center'}}>
     <h2 style={{marginBottom:10}}>Cara Kerja</h2>
     <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Laporan Anda diproses secara transparan dari mulai hingga selesai.</p>
@@ -54,7 +54,7 @@ function Landing(){
     </div>
    </div>
   </section>
-  <section id="tentang" style={{padding:'40px 20px'}}>
+  <section id="tentang" style={{padding:'40px 20px'}} className="full-screen">
    <div style={{maxWidth:1000,margin:'0 auto',display:'flex',gap:40,flexWrap:'wrap',alignItems:'center'}}>
     <div style={{flex:1,minWidth:280}}>
      <h2 style={{marginBottom:12}}>Tentang INFRA-CARE</h2>
@@ -67,7 +67,7 @@ function Landing(){
     </div>
    </div>
   </section>
-  <section id="bantuan" style={{padding:'40px 20px'}}>
+  <section id="bantuan" style={{padding:'40px 20px'}} className="full-screen">
    <div style={{maxWidth:800,margin:'0 auto',textAlign:'center'}}>
     <h2 style={{marginBottom:10}}>Bantuan</h2>
     <p style={{marginBottom:30,fontSize:14,opacity:0.8}}>Butuh bantuan? Kami siap membantu Anda.</p>
