@@ -230,8 +230,8 @@ function Dashboard(){
 
 function Buat(){
  const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:-6.2088,lng:106.8456,urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
- const [mapCenter,setMapCenter]=useState([-6.2088,106.8456]);
- const [markerPos,setMarkerPos]=useState([-6.2088,106.8456]);
+ const [mapCenter,setMapCenter]=useState([-7.0292,112.7461]);
+ const [markerPos,setMarkerPos]=useState([-7.0292,112.7461]);
  const [searchResults,setSearchResults]=useState([]);
  const [searchQuery,setSearchQuery]=useState('');
  const set=k=>v=>setF({...f,[k]:v.target.value});
