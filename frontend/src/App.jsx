@@ -217,16 +217,20 @@ function Dashboard(){
  </>}
 
 function Buat(){
- const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:'',lng:'',urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
+ const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:'',lng:'',urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[fotoPrev,setFotoPrev]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
  const set=k=>v=>setF({...f,[k]:v.target.value});
+ const toBase64=file=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
  const submit=async()=>{setE('');if(!foto)return setE('Foto / bukti kerusakan wajib diunggah');setBusy(true);
-  const fd=new FormData();Object.entries(f).forEach(([k,v])=>fd.append(k,v));fd.append('foto',foto);
-  try{const c=await api('/complaints',{method:'POST',form:fd});window.dispatchEvent(new Event('notif:refresh'));nav('/app/sukses/'+c.kode)}catch(x){setE(x.message)}setBusy(false)};
+  try{
+   const foto64=await toBase64(foto);
+   const c=await api('/complaints',{method:'POST',body:{...f,foto:foto64}});
+   window.dispatchEvent(new Event('notif:refresh'));nav('/app/sukses/'+c.kode)
+  }catch(x){setE(x.message)}setBusy(false)};
  return<div className="grid2"><div className="card"><Link to="/app" style={{color:'var(--b)'}}>← Kembali</Link><h2 style={{margin:'8px 0'}}>📢 Form Pengaduan</h2><p className="mu">Sampaikan laporan kerusakan infrastruktur dengan lengkap dan jelas.</p>
   <div className="row2"><div><label>Judul Pengaduan *</label><input className="in" placeholder="Contoh: Jalan Berlubang di Jl. Melati" value={f.judul} onChange={set('judul')}/></div>
   <div><label>Kategori *</label><select className="in" value={f.kategori} onChange={set('kategori')}><option value="">Pilih kategori</option>{KAT.map(k=><option key={k}>{k}</option>)}</select></div></div>
   <label>Deskripsi *</label><textarea className="in" rows="5" maxLength="500" placeholder="Jelaskan kondisi kerusakan secara detail..." value={f.deskripsi} onChange={set('deskripsi')}/><div className="mu" style={{textAlign:'right'}}>{f.deskripsi.length}/500</div>
-  <div className="row2"><div><label>Foto / Bukti Kerusakan *</label><label className="in" style={{textAlign:'center',borderStyle:'dashed',cursor:'pointer',padding:30}}>☁ {foto?foto.name:'Klik untuk mengunggah foto'}<br/><span className="mu">Format: JPG, PNG (Maks. 5MB)</span><input type="file" accept="image/png,image/jpeg" hidden onChange={x=>setFoto(x.target.files[0])}/></label></div>
+  <div className="row2"><div><label>Foto / Bukti Kerusakan *</label><label className="in" style={{textAlign:'center',borderStyle:'dashed',cursor:'pointer',padding:30}}>{fotoPrev?<img src={fotoPrev} style={{maxWidth:'100%',maxHeight:120,borderRadius:8,marginBottom:8}}/>:'☁'}{foto?foto.name:'Klik untuk mengunggah foto'}<br/><span className="mu">Format: JPG, PNG (Maks. 5MB)</span><input type="file" accept="image/png,image/jpeg" hidden onChange={x=>{const file=x.target.files[0];if(file){setFoto(file);toBase64(file).then(setFotoPrev)}}}/></label></div>
   <div><label>Lokasi *</label><input className="in" placeholder="Alamat / lokasi kerusakan" value={f.lokasi} onChange={set('lokasi')}/><div className="row2" style={{marginTop:8}}><input className="in" placeholder="Latitude" value={f.lat} onChange={set('lat')}/><input className="in" placeholder="Longitude" value={f.lng} onChange={set('lng')}/></div></div></div>
   <label>Tingkat Urgensi *</label><div className="urg">{[['Tinggi','Butuh penanganan segera'],['Sedang','Mengganggu aktivitas masyarakat'],['Rendah','Kerusakan ringan']].map(([u,d])=><div key={u} className={'tag '+u.toLowerCase()+(f.urgensi===u?' on':'')} onClick={()=>setF({...f,urgensi:u})}><b>{u}</b>{d}</div>)}</div>
   {e&&<div className="err">{e}</div>}<div style={{display:'flex',gap:12,marginTop:18,alignItems:'center'}}><span className="mu" style={{flex:1}}>ℹ Pastikan data yang Anda isi sudah benar agar pengaduan dapat diproses dengan cepat.</span><button className="btn" disabled={busy} onClick={submit}>✈ {busy?'Mengirim...':'Kirim Pengaduan'}</button></div></div>
