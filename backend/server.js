@@ -46,7 +46,7 @@ pool.on('error', (err) => {
 const app = express();
 const SECRET = process.env.JWT_SECRET || 'infra-care-dev';
 const STATUS = ['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai','Ditolak'];
-app.use(cors(),express.json());
+app.use(cors(),express.json({ limit: '10mb' }));
 const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
 const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error('WRAP ERROR:',e.stack||e.message);res.status(500).json({message:'Terjadi kesalahan server: '+e.message})});
 const auth=roles=>(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),SECRET)}catch{return res.status(401).json({message:'Belum login'})}
@@ -95,7 +95,7 @@ app.patch('/api/complaints/:id/status',auth(['admin','petugas']),wrap(async(req,
 app.get('/api/notifications',auth(),wrap(async(req,res)=>res.json(await q('select * from notifications where user_id=$1 order by created_at desc',[req.user.id]))));
 app.post('/api/notifications/read-all',auth(),wrap(async(req,res)=>{await q('update notifications set dibaca=true where user_id=$1',[req.user.id]);res.json({ok:true})}));
 // Error handler umum (selalu kirim JSON)
-app.use((err,req,res,next)=>{console.error('ERROR:',err.stack||err.message);res.status(500).json({message:'Terjadi kesalahan server: '+err.message})});
+app.use((err,req,res,next)=>{if(err.type==='entity.too.large')return res.status(413).json({message:'Ukuran foto terlalu besar. Gunakan foto yang lebih kecil.'});console.error('ERROR:',err.stack||err.message);res.status(500).json({message:'Terjadi kesalahan server: '+err.message})});
 
 // 404 handler untuk route API yang tidak ditemukan (selalu JSON)
 app.use('/api',(req,res)=>res.status(404).json({message:'Endpoint tidak ditemukan'}));
