@@ -1,6 +1,7 @@
 import React,{useEffect,useState} from 'react';
 import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet,useLocation} from 'react-router-dom';
 import {api,getUser,tgl,slug} from './api.js';
+import L from 'leaflet';
 import {MapContainer,TileLayer,Marker,Popup,useMap} from 'react-leaflet';
 const MapClicker = ({onClick}) => {
   const map = useMap();
@@ -232,6 +233,14 @@ function Buat(){
  const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:-6.2088,lng:106.8456,urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
  const [mapCenter,setMapCenter]=useState([-7.0292,112.7461]);
  const [markerPos,setMarkerPos]=useState([-7.0292,112.7461]);
+ const customIcon = L.icon({
+   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+   iconSize: [25, 41],
+   iconAnchor: [12, 41],
+   popupAnchor: [1, -34],
+   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+   shadowSize: [41, 41]
+ });
  const [searchResults,setSearchResults]=useState([]);
  const [searchQuery,setSearchQuery]=useState('');
  const set=k=>v=>setF({...f,[k]:v.target.value});
@@ -248,7 +257,7 @@ function Buat(){
   <div style={{marginTop:14}}><label style={{fontWeight:700,fontSize:14,marginBottom:6,display:'block'}}>📍 Lokasi Kerusakan *</label>
    <div style={{display:'flex',gap:8,marginBottom:8}}><input className="in" style={{flex:1}} placeholder="Cari desa, jalan, atau alamat..." value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} onKeyDown={e=>e.key==='Enter'&&searchLocation()}/><button className="btn s" onClick={searchLocation}>Cari</button></div>
    {searchResults.length>0&&<div style={{border:'1px solid #edf3fb',borderRadius:8,background:'#fff',maxHeight:200,overflowY:'auto',marginBottom:8}}>{searchResults.map((r,i)=><div key={i} style={{padding:8,cursor:'pointer',borderBottom:i<searchResults.length-1?'1px solid #f1f5f9':'none',fontSize:13}} onClick={()=>selectLoc(r)}><b>{r.label}</b><br/><span className="mu" style={{fontSize:11}}>Lat: {r.lat.toFixed(4)}, Lng: {r.lng.toFixed(4)}</span></div>)}</div>}
-   <div style={{height:'12.5vh',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',position:'relative',marginBottom:8}}><MapContainer center={mapCenter} zoom={15} style={{height:'100%',width:'100%'}}><MapClicker onClick={onMapClick}/><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/><Marker position={markerPos} draggable onDragEnd={e=>{const p=e.target.getLatLng();setMarkerPos([p.lat,p.lng]);setMapCenter([p.lat,p.lng]);setF({...f,lat:p.lat,lng:p.lng})}}><Popup>Titik lokasi pengaduan</Popup></Marker></MapContainer></div>
+   <div style={{height:'12.5vh',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',position:'relative',marginBottom:8}}><MapContainer center={mapCenter} zoom={15} style={{height:'100%',width:'100%'}}><MapClicker onClick={onMapClick}/><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/><Marker position={markerPos} icon={customIcon} draggable onDragEnd={e=>{const p=e.target.getLatLng();setMarkerPos([p.lat,p.lng]);setMapCenter([p.lat,p.lng]);setF({...f,lat:p.lat,lng:p.lng})}}><Popup>Titik lokasi pengaduan</Popup></Marker></MapContainer></div>
    <div className="mu" style={{textAlign:'center',fontSize:12}}>Titik terpilih: {markerPos[0].toFixed(6)}, {markerPos[1].toFixed(6)}</div>
   </div>
   <div style={{marginTop:16}}>
