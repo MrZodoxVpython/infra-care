@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React,{useEffect,useState} from 'react';
 import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet,useLocation} from 'react-router-dom';
 import {api,getUser,tgl,slug} from './api.js';
@@ -359,3 +360,55 @@ export default function App(){return<Routes>
   <Route path="riwayat" element={<Riwayat/>}/><Route path="notifikasi" element={<Notif/>}/>
   <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
  <Route path="*" element={<Navigate to="/"/>}/></Routes>}
+=======
+import { Navigate, Route, Routes } from 'react-router-dom';
+import Guard from './components/Guard.jsx';
+import Layout from './components/Layout.jsx';
+import Soon from './components/Soon.jsx';
+import Buat from './pages/Buat.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Kelola from './pages/Kelola.jsx';
+import Landing from './pages/Landing.jsx';
+import Login from './pages/Login.jsx';
+import Notifikasi from './pages/Notifikasi.jsx';
+import Profil from './pages/Profil.jsx';
+import Riwayat from './pages/Riwayat.jsx';
+import Sukses from './pages/Sukses.jsx';
+import Tracking from './pages/Tracking.jsx';
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/app" element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route
+          path="buat"
+          element={
+            <Guard roles={['masyarakat']}>
+              <Buat />
+            </Guard>
+          }
+        />
+        <Route path="sukses/:kode" element={<Sukses />} />
+        <Route path="tracking" element={<Tracking />} />
+        <Route path="tracking/:kode" element={<Tracking />} />
+        <Route path="riwayat" element={<Riwayat />} />
+        <Route path="notifikasi" element={<Notifikasi />} />
+        <Route
+          path="kelola"
+          element={
+            <Guard roles={['admin', 'petugas']}>
+              <Kelola />
+            </Guard>
+          }
+        />
+        <Route path="profil" element={<Profil />} />
+        <Route path="*" element={<Soon />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" />} />
+    </Routes>
+  );
+}
+>>>>>>> Stashed changes
