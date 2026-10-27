@@ -12,6 +12,15 @@ const MapClicker = ({onClick}) => {
   }, [map, onClick]);
   return null;
 };
+const FitBounds = ({points}) => {
+  const map = useMap();
+  useEffect(() => {
+    if(!points || points.length === 0) return;
+    const bounds = L.latLngBounds(points);
+    map.fitBounds(bounds, {padding: [40, 40], maxZoom: 14});
+  }, [points, map]);
+  return null;
+};
 const customIcon = L.icon({
    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
    iconSize: [25, 41],
@@ -215,7 +224,27 @@ function Dashboard(){
 
     <div className="d-map" style={{background:cardBg}}>
      <div className="d-section-head"><h3 style={{color:cardText}}>Sebaran Pengaduan</h3><Link to="/app/peta" style={{color:'var(--b)',fontSize:13}}>Lihat Semua →</Link></div>
-     <div className="d-map-placeholder" style={{height:'200px',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',marginTop:8}}><MapContainer center={mapCenter} zoom={12} style={{height:'100%',width:'100%'}}><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/>{rows.filter(r=>r.lat&&r.lng).map((r,i)=>(<Marker key={r.id} position={[r.lat,r.lng]} icon={customIcon}><Popup>{r.judul}</Popup></Marker>))}</MapContainer></div>
+      <div className="d-map-placeholder" style={{height:'200px',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',marginTop:8}}>
+        <MapContainer center={mapCenter} zoom={12} style={{height:'100%',width:'100%'}}>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/>
+          {rows.filter(r=>r.lat&&r.lng).map((r)=>(
+            <Marker key={r.id} position={[parseFloat(r.lat), parseFloat(r.lng)]} icon={customIcon}>
+              <Popup>
+                <div style={{minWidth:150}}>
+                  <b>{r.judul}</b><br/>
+                  <small>{r.kode} • {r.kategori}</small><br/>
+                  <small>Status: {r.status}</small><br/>
+                  <small>{r.lokasi}</small>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+          {(() => {
+            const pts = rows.filter(r=>r.lat&&r.lng).map(r=>[parseFloat(r.lat), parseFloat(r.lng)]);
+            return pts.length>0 ? <FitBounds points={pts}/> : null;
+          })()}
+        </MapContainer>
+      </div>
      <div className="d-categories">
       {s.kategori.map(k=>(<div key={k.kategori} className="d-cat" style={{color:cardText,borderBottomColor:borderCol}}><div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:cardText}}>{k.kategori}</span><span className="mu" style={{fontSize:12,color:cardSub}}>{k.n}</span></div><div className="d-cat-bar" style={{background:progBg}}><i style={{width:k.n/tot*100+'%'}} /></div></div>))}
      </div>
