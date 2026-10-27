@@ -155,7 +155,7 @@ function Table({rows,admin,onChange,compact,dark}){
  {!rows.length&&<tr><td colSpan="8" className="mu" style={{textAlign:'center',color:tSub}}>Belum ada data pengaduan.</td></tr>}</tbody></table>}
 
 function Dashboard(){
- const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
+ const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]);
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark)},[dark]);
  useEffect(()=>{api('/stats').then(setS);api('/complaints').then(setRows)},[]);
@@ -209,7 +209,7 @@ function Dashboard(){
 
     <div className="d-map" style={{background:cardBg}}>
      <div className="d-section-head"><h3 style={{color:cardText}}>Sebaran Pengaduan</h3><Link to="/app/peta" style={{color:'var(--b)',fontSize:13}}>Lihat Semua →</Link></div>
-     <div className="d-map-placeholder" style={{background:dark?'#0f172a':'#eef5fd',color:dark?'#60a5fa':'#1565d8'}}>🗺️</div>
+     <div className="d-map-placeholder" style={{height:'200px',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',marginTop:8}}><MapContainer center={mapCenter} zoom={12} style={{height:'100%',width:'100%'}}><TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/>{rows.filter(r=>r.lat&&r.lng).map((r,i)=>(<Marker key={r.id} position={[r.lat,r.lng]} icon={customIcon}><Popup>{r.judul}</Popup></Marker>))}</MapContainer></div>
      <div className="d-categories">
       {s.kategori.map(k=>(<div key={k.kategori} className="d-cat" style={{color:cardText,borderBottomColor:borderCol}}><div style={{display:'flex',justifyContent:'space-between'}}><span style={{color:cardText}}>{k.kategori}</span><span className="mu" style={{fontSize:12,color:cardSub}}>{k.n}</span></div><div className="d-cat-bar" style={{background:progBg}}><i style={{width:k.n/tot*100+'%'}} /></div></div>))}
      </div>
