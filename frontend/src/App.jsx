@@ -335,9 +335,3 @@ export default function App(){return<Routes>
   <Route path="riwayat" element={<Riwayat/>}/><Route path="notifikasi" element={<Notif/>}/>
   <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
  <Route path="*" element={<Navigate to="/"/>}/></Routes>}
- const customIcon = L.icon({
-   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-   iconSize: [25, 41],
-   iconAnchor: [12, 41],
-   popupAnchor: [1, -34],
- });
