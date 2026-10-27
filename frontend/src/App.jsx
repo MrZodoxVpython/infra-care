@@ -12,13 +12,11 @@ const MapClicker = ({onClick}) => {
   }, [map, onClick]);
   return null;
 };
-const FitBounds = ({points}) => {
+const FitBounds = ({forceCenter=[-7.0292, 112.7461], forceZoom=12}) => {
   const map = useMap();
   useEffect(() => {
-    if(!points || points.length === 0) return;
-    const bounds = L.latLngBounds(points);
-    map.fitBounds(bounds, {padding: [40, 40], maxZoom: 14});
-  }, [points, map]);
+    map.setView(forceCenter, forceZoom, {animate: false});
+  }, [map, forceCenter, forceZoom]);
   return null;
 };
 const customIcon = L.icon({
@@ -239,10 +237,7 @@ function Dashboard(){
               </Popup>
             </Marker>
           ))}
-          {(() => {
-            const pts = rows.filter(r=>r.lat&&r.lng).map(r=>[parseFloat(r.lat), parseFloat(r.lng)]);
-            return pts.length>0 ? <FitBounds points={pts}/> : null;
-          })()}
+          <FitBounds forceCenter={[-7.0292, 112.7461]} forceZoom={12}/>
         </MapContainer>
       </div>
      <div className="d-categories">
