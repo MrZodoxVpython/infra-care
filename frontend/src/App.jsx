@@ -12,6 +12,12 @@ const MapClicker = ({onClick}) => {
   }, [map, onClick]);
   return null;
 };
+const customIcon = L.icon({
+   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+   iconSize: [25, 41],
+   iconAnchor: [12, 41],
+   popupAnchor: [1, -34]
+});
 import 'leaflet/dist/leaflet.css';
 
 const KAT=['Jalan','Jembatan','Drainase','Penerangan','Fasilitas Umum','Lainnya'];
@@ -233,12 +239,6 @@ function Buat(){
  const nav=useNavigate(),[f,setF]=useState({judul:'',kategori:'',deskripsi:'',lokasi:'',lat:-6.2088,lng:106.8456,urgensi:'Tinggi'}),[foto,setFoto]=useState(null),[e,setE]=useState(''),[busy,setBusy]=useState(false);
  const [mapCenter,setMapCenter]=useState([-7.0292,112.7461]);
  const [markerPos,setMarkerPos]=useState([-7.0292,112.7461]);
- const customIcon = L.icon({
-   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-   iconSize: [25, 41],
-   iconAnchor: [12, 41],
-   popupAnchor: [1, -34],
- });
  const [searchResults,setSearchResults]=useState([]);
  const [searchQuery,setSearchQuery]=useState('');
  const set=k=>v=>setF({...f,[k]:v.target.value});
@@ -320,7 +320,11 @@ function Kelola(){
 
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
 const Profil=()=>{const u=getUser();return<div className="card"><h2>👤 Profil</h2><p><b>{u.nama}</b><br/>{u.email}<br/>{ROLE[u.role]}</p></div>};
-const Home=()=>{const u=getUser();return u.role==='masyarakat'||true?<Dashboard/>:null};
+const Home=()=>{
+  const u=getUser();
+  if(!u)return <Navigate to="/login"/>;
+  return <Dashboard/>;
+};
 const Guard=({roles,children})=>roles.includes(getUser()?.role)?children:<Navigate to="/app"/>;
 
 export default function App(){return<Routes>
@@ -331,3 +335,9 @@ export default function App(){return<Routes>
   <Route path="riwayat" element={<Riwayat/>}/><Route path="notifikasi" element={<Notif/>}/>
   <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
  <Route path="*" element={<Navigate to="/"/>}/></Routes>}
+ const customIcon = L.icon({
+   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+   iconSize: [25, 41],
+   iconAnchor: [12, 41],
+   popupAnchor: [1, -34],
+ });
