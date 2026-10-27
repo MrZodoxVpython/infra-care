@@ -144,6 +144,21 @@ html.dark .t-img img{background:#334155}
   padding: 0 20px !important;
 }
 
+
+
+/* Leaflet custom marker transparency - no black box artifact */
+.leaflet-marker-icon {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.leaflet-marker-shadow {
+  display: none !important;
+}
+.leaflet-container .leaflet-marker-icon {
+  filter: none !important;
+}
+
 @media(max-width:900px){.app,.grid2,.login{grid-template-columns:1fr}.hero{display:flex;flex-direction:column;align-items:flex-start;padding:20px}.side{display:none}.cards4,.stats4,.d-stats{grid-template-columns:1fr 1fr}.stats4{margin:40px auto 0}.login{padding:20px}.nav{margin:10px}.nav nav{display:none}.d-layout{grid-template-columns:1fr}.d-col-left,.d-col-right{width:100%}.d-together-grid{grid-template-columns:1fr}}
 
 /* Dark mode */
