@@ -27,7 +27,7 @@ label{display:block;font-weight:700;font-size:14px;margin:14px 0 6px}.err{backgr
 .main{padding:20px 26px}.banner{background:linear-gradient(90deg,#cfe6ff,#e8f3ff);border-radius:18px;padding:22px 26px;margin-bottom:18px}.banner h2{font-size:24px;color:var(--bd)}
 .grid2{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}.stk{display:grid;gap:18px}.stk-img{width:100%;height:auto;border-radius:18px;box-shadow:0 4px 18px rgba(30,90,180,.08);display:block;margin-bottom:18px}.cards4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}.cards4 .card b{font-size:30px;display:block}
 table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;padding:10px 8px;color:var(--bd)}td{padding:10px 8px;border-top:1px solid #edf3fb}
-.tag{display:inline-block;border-radius:14px;padding:4px 12px;font-size:12px;font-weight:600;background:#e6f0ff;color:var(--b)}
+.tag{display:inline-block;border-radius:14px;padding:4px 12px;font-size:12px;font-weight:600;background:#e6f0ff;color:var(--b)}.auth-link{color:var(--b);cursor:pointer}.land-about-card{background:#f1f5f9;border-radius:16px;padding:24px;text-align:center}
 .diterima,.diverifikasi{background:#efe9ff;color:#7a4fd6}.diprioritaskan,.ditugaskan,.diproses{background:#e1f0ff;color:#1565d8}.dalam-perbaikan,.sedang{background:#fff1d8;color:#e08a00}.selesai,.rendah{background:#dff7e8;color:#1f9d55}.ditolak,.tinggi{background:#fde3e3;color:#d33}
 .tabs{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}.tabs button{border:1px solid var(--bd2);background:#fff;border-radius:20px;padding:9px 18px;font-weight:600;color:var(--tx);cursor:pointer}.tabs .on{background:var(--b);color:#fff}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.urg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.urg div{border:2px solid transparent;border-radius:12px;padding:12px;cursor:pointer;font-size:12px}.urg b{display:block;font-size:15px}.urg .on{border-color:currentColor}
@@ -176,6 +176,15 @@ html.dark .lcard{background:#1e293b;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 html.dark .in{background:#0f172a;border-color:var(--bd2);color:var(--tx)}
 html.dark .in:focus{border-color:var(--b)}
 html.dark .nav{background:#0f172a;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+html.dark .nav nav a.on{color:#93c5fd;border-bottom-color:#60a5fa}
+html.dark .logo b{color:#f1f5f9}
+html.dark .hero h1{color:#f1f5f9}
+html.dark .hero h1 span{color:#60a5fa}
+html.dark .stats4{background:#1e293b;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+html.dark .stats4 b{color:#f1f5f9}
+html.dark .login h1{color:#f1f5f9}
+html.dark .auth-link{color:#93c5fd}
+html.dark .land-about-card{background:#1e293b}
 html.dark .feat{background:#1e293b}
 html.dark .banner{background:#1e293b}
 html.dark .top{background:#0f172a;box-shadow:0 2px 10px rgba(0,0,0,.4)}
@@ -192,7 +201,7 @@ html.dark .ok-ic{background:#2fc26a}
 html.dark .kode{background:#1e3a5f}
 html.dark .nt{background:#0f172a}
 html.dark .nt.un{background:#1e293b}
-html.dark .tag{background:#1e293b;color:var(--b)}
+html.dark .tag{background:#1e293b;color:#93c5fd}
 html.dark .diterima,.html.dark .diverifikasi{background:#2e1a47;color:#a78bfa}
 html.dark .diprioritaskan,.html.dark .ditugaskan,.html.dark .diproses{background:#1e3a5f;color:#60a5fa}
 html.dark .dalam-perbaikan,.html.dark .sedang{background:#451a03;color:#fbbf24}

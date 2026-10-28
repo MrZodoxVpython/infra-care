@@ -87,7 +87,7 @@ function Landing(){
      <p style={{marginBottom:16,fontSize:14,lineHeight:1.6,opacity:0.8}}>INFRA-CARE adalah sistem pengaduan infrastruktur publik yang memudahkan masyarakat melaporkan kerusakan jalan, drainase, penerangan, dan fasilitas umum secara digital.</p>
      <p style={{marginBottom:16,fontSize:14,lineHeight:1.6,opacity:0.8}}>Dengan INFRA-CARE, setiap laporan dapat dipantau secara real-time, dan pemerintah dapat menindaklanjuti kerusakan infrastruktur dengan lebih cepat dan terstruktur.</p>
     </div>
-    <div style={{flex:1,minWidth:280,background:'#f1f5f9',borderRadius:16,padding:24,textAlign:'center'}}>
+    <div className="land-about-card" style={{flex:1,minWidth:280}}>
      <div style={{fontSize:48}}>🏗</div>
      <p style={{fontSize:14,opacity:0.8,marginTop:12}}>Bersama Jaga Infrastruktur untuk Masa Depan</p>
     </div>
@@ -129,10 +129,10 @@ function Login(){
    {reg&&<><label>Nama Lengkap</label><input className="in" placeholder="Masukkan nama Anda" value={f.nama} onChange={set('nama')}/></>}
    <label>Email</label><input className="in" type="email" placeholder="Masukkan email Anda" value={f.email} onChange={set('email')}/>
    <label>Password</label><div style={{position:'relative'}}><input className="in" type={show?'text':'password'} placeholder="Masukkan password" value={f.password} onChange={set('password')}/><span onClick={()=>setShow(!show)} style={{position:'absolute',right:14,top:12,cursor:'pointer'}}>👁</span></div>
-   {!reg&&<div style={{display:'flex',justifyContent:'space-between',margin:'14px 0',fontSize:14}}><span><input type="checkbox"/> Ingat saya</span><a style={{color:'var(--b)'}}>Lupa password?</a></div>}
+   {!reg&&<div style={{display:'flex',justifyContent:'space-between',margin:'14px 0',fontSize:14}}><span><input type="checkbox"/> Ingat saya</span><a className="auth-link">Lupa password?</a></div>}
    {e&&<div className="err">{e}</div>}
    <button className="btn w" style={{marginTop:14}}>{reg?'DAFTAR':'MASUK'} →</button>
-   <p className="mu" style={{textAlign:'center'}}>{reg?'Sudah punya akun?':'Belum memiliki akun?'} <a style={{color:'var(--b)',fontWeight:700,cursor:'pointer'}} onClick={()=>setReg(!reg)}>{reg?'Masuk':'Daftar sekarang'}</a></p>
+   <p className="mu" style={{textAlign:'center'}}>{reg?'Sudah punya akun?':'Belum memiliki akun?'} <a className="auth-link" style={{fontWeight:700,cursor:'pointer'}} onClick={()=>setReg(!reg)}>{reg?'Masuk':'Daftar sekarang'}</a></p>
    <div className="banner" style={{fontSize:13,marginBottom:0}}>🛡 Layanan ini tersedia untuk seluruh masyarakat demi infrastruktur yang lebih baik.</div></form></div>}
 
 function Layout(){
