@@ -1277,3 +1277,55 @@ html.dark .bp-tips li p{color:#94a3b8}
  .bp-submit{padding:16px 18px}
  .bp-submit .btn{width:100%}
 }
+
+/* ============================================================
+   DASHBOARD — penyesuaian responsif saja
+   Tampilan desktop (>=1151px) tidak berubah.
+   ============================================================ */
+@media(max-width:1150px){
+ .d-layout{grid-template-columns:1fr}
+ .d-col-left,.d-col-right{width:100%;min-width:0}
+ .d-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+ .d-banner{padding:22px 24px}
+ .d-map{flex:initial}
+ .d-together-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+ .d-banner{padding:18px;border-radius:18px}
+ .d-banner h2{font-size:20px}
+ .d-banner p{max-width:none;font-size:13px;margin-bottom:14px}
+ .d-btn{width:100%;justify-content:center;padding:11px 18px}
+ .d-actions{margin-bottom:16px}
+ .d-actions h3{font-size:15px;margin-bottom:10px}
+ .d-action-grid{gap:10px}
+ .d-action{padding:14px 10px;gap:8px}
+ .d-action-ic{width:46px;height:46px;border-radius:12px;font-size:22px}
+ .d-action b{font-size:13px}
+ .d-recent,.d-map,.d-together{padding:16px;border-radius:16px}
+ .d-section-head{gap:8px;margin-bottom:12px}
+ .d-section-head h3{font-size:15px}
+ .d-section-head a{white-space:nowrap;font-size:12px}
+ .d-recent .t-compact{font-size:12px}
+ .d-recent .t-compact th,.d-recent .t-compact td{padding:8px 6px}
+ .d-recent .t-img{gap:8px}
+ .d-recent .t-img img{width:38px;height:38px;border-radius:8px}
+ .d-recent .t-img div span{font-size:11px}
+ .d-stats-grid{gap:10px}
+ .d-stat-card{padding:14px;border-radius:14px}
+ .d-stat-ic{width:36px;height:36px;border-radius:10px;font-size:16px}
+ .d-stat-body b{font-size:22px}
+ .d-map{gap:12px}
+ .d-together h3{font-size:15px}
+ .d-together-grid{gap:8px}
+ .d-tog-item{padding:12px}
+}
+@media(max-width:480px){
+ .d-action-grid{grid-template-columns:1fr}
+ .d-together-grid{grid-template-columns:1fr}
+ .d-recent .t-compact th:nth-child(2),.d-recent .t-compact td:nth-child(2){display:none}
+}
+@media(max-width:400px){
+ .d-stats-grid{grid-template-columns:1fr}
+}
