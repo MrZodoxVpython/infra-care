@@ -382,6 +382,7 @@ const Profil=()=>{
  const [f,setF]=useState({nama:u.nama||'',email:u.email||'',foto:u.foto||''});
  const [p,setP]=useState({oldPassword:'',newPassword:'',confirm:''});
  const [msg,setMsg]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);
+ const [preview,setPreview]=useState(null);
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{api('/auth/me').then(d=>{setU(d);setF({nama:d.nama||'',email:d.email||'',foto:d.foto||''});localStorage.setItem('user',JSON.stringify(d));}).catch(()=>{})},[]);
  const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
@@ -396,10 +397,11 @@ const Profil=()=>{
    setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
  const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#edf3fb';
  const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+ const fotoSrc=f.foto||u.foto;
  return<div style={{maxWidth:1100,margin:'0 auto'}}><div className="banner"><h2>👤 Profil Saya</h2><p className="mu">Kelola informasi akun, foto profil, dan keamanan akun Anda.</p></div>
   <div className="grid2" style={{alignItems:'start'}}><div className="stk"><div className="card" style={{padding:0,overflow:'hidden',background:cardBg}}>
    <div style={{display:'flex',gap:24,alignItems:'center',padding:'28px 32px',background:dark?'linear-gradient(135deg,#1e293b,#0f172a)':'linear-gradient(135deg,#f8fbff,#eef5fd)'}}><div style={{position:'relative'}}>
-     {f.foto||u.foto?<img src={f.foto||u.foto} style={{width:110,height:110,borderRadius:'50%',objectFit:'cover',border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)'}}/>:
+     {fotoSrc?<img src={fotoSrc} onClick={()=>setPreview(fotoSrc)} style={{width:110,height:110,borderRadius:'50%',objectFit:'cover',border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)',cursor:'zoom-in'}}/>:
      <div style={{width:110,height:110,borderRadius:'50%',display:'grid',placeItems:'center',background:'linear-gradient(135deg,var(--b),#1e40af)',color:'#fff',fontSize:38,fontWeight:800,border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)'}}>{initials}</div>}
      <label style={{position:'absolute',right:4,bottom:4,width:36,height:36,borderRadius:'50%',background:cardBg,border:'2px solid '+borderCol,display:'grid',placeItems:'center',cursor:'pointer',boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}} title="Ubah foto profil">📷<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
    </div>
@@ -421,7 +423,9 @@ const Profil=()=>{
    </form>}
   </div></div>
   <div className="stk"><div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:16}}>Informasi Akun</h3><div style={{display:'flex',flexDirection:'column',gap:14}}><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Role</span><span style={{color:cardText,fontWeight:600}}>{ROLE[u.role]}</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Status</span><span style={{color:'#22c55e',fontWeight:600}}>Aktif</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">User ID</span><span style={{color:cardSub,fontSize:13}}>#{u.id}</span></div></div></div>
-   <div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:12}}>Tips Keamanan</h3><ul style={{margin:0,paddingLeft:18,color:cardSub,fontSize:13,display:'flex',flexDirection:'column',gap:8}}><li>Gunakan password yang kuat dan unik</li><li>Jangan bagikan kredensial akun Anda</li><li>Perbarui informasi kontak secara berkala</li></ul></div></div></div></div>};
+   <div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:12}}>Tips Keamanan</h3><ul style={{margin:0,paddingLeft:18,color:cardSub,fontSize:13,display:'flex',flexDirection:'column',gap:8}}><li>Gunakan password yang kuat dan unik</li><li>Jangan bagikan kredensial akun Anda</li><li>Perbarui informasi kontak secara berkala</li></ul></div></div></div>
+  {preview&&<div onClick={()=>setPreview(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999,cursor:'zoom-out'}}><img src={preview} style={{maxWidth:'90vw',maxHeight:'90vh',borderRadius:16,boxShadow:'0 30px 80px rgba(0,0,0,0.7)'}} onClick={e=>e.stopPropagation()}/></div>}
+</div>};
 const Home=()=>{
   const u=getUser();
   if(!u)return <Navigate to="/login"/>;
