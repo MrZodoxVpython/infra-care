@@ -135,7 +135,7 @@ function Login(){
    <div className="banner" style={{fontSize:13,marginBottom:0}}>🛡 Layanan ini tersedia untuk seluruh masyarakat demi infrastruktur yang lebih baik.</div></form></div>}
 
 function Layout(){
- const u=getUser(),nav=useNavigate(),loc=useLocation(),[n,setN]=useState(0),[dark,setDark]=useState(()=>localStorage.getItem('theme')==='dark');
+ const [u,setU]=useState(getUser()||{}),nav=useNavigate(),loc=useLocation(),[n,setN]=useState(0),[dark,setDark]=useState(()=>localStorage.getItem('theme')==='dark');
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark);localStorage.setItem('theme',dark?'dark':'light')},[dark]);
  useEffect(()=>{
    const fetchNotif=async()=>{
@@ -144,15 +144,20 @@ function Layout(){
    fetchNotif();
    const onRefresh=()=>fetchNotif();
    window.addEventListener('notif:refresh',onRefresh);
-   return()=>window.removeEventListener('notif:refresh',onRefresh);
+   const syncUser=()=>{const cu=getUser();if(cu)setU(cu);};
+   window.addEventListener('user:refresh',syncUser);
+   return()=>{window.removeEventListener('notif:refresh',onRefresh);window.removeEventListener('user:refresh',syncUser);};
  },[loc]);
- if(!u)return<Navigate to="/login"/>;
+ useEffect(()=>{(async()=>{try{const me=await api('/auth/me');setU(me);localStorage.setItem('user',JSON.stringify(me));}catch(_){}})();},[loc.pathname]);
+ if(!u?.id)return<Navigate to="/login"/>;
  const out=()=>{localStorage.clear();nav('/')};
   const [menuOpen,setMenuOpen]=useState(false);
- return<div className="app"><aside className="side"><div className="s-logo"><Logo/></div><div className="s-user"><div className="av">{u.nama[0]}</div><div><b>Halo, {u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div></div>
+ const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+ const Avatar=({small})=>(u.foto?<img src={u.foto} className="av" style={{objectFit:'cover',width:small?34:38,height:small?34:38,borderRadius:'50%'}}/>:<div className="av" style={{width:small?34:38,height:small?34:38}}>{initials}</div>);
+ return<div className="app"><aside className="side"><div className="s-logo"><Logo/></div><div className="s-user"><Avatar/><div><b>Halo, {u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div></div>
   {MENU[u.role].map(([to,l,ic])=><NavLink key={to} to={to} end={to==='/app'} className={({isActive})=>isActive?'s-item on':'s-item'}>{ic} {l}{l==='Notifikasi'&&n>0&&<span className="s-badge">{n}</span>}</NavLink>)}
    <div className="s-quote">Infrastruktur baik untuk masa depan kita bersama ♡</div></aside>
-  <div className="app-body"><div className="top"><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..."/><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><div className="av">{u.nama[0]}</div><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
+  <div className="app-body"><div className="top"><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..."/><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
 
 function Table({rows,admin,onChange,compact,dark,highlightFn}){
  if(compact){
@@ -381,7 +386,7 @@ const Profil=()=>{
  useEffect(()=>{api('/auth/me').then(d=>{setU(d);setF({nama:d.nama||'',email:d.email||'',foto:d.foto||''});localStorage.setItem('user',JSON.stringify(d));}).catch(()=>{})},[]);
  const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
  const uploadFoto=async(e)=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressImage(file);setF({...f,foto:data});setMsg('Foto dipilih. Klik Simpan Perubahan untuk menyimpan.');setErr('');}catch(x){setErr(x.message);}};
- const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);localStorage.setItem('user',JSON.stringify(nu));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
+ const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);localStorage.setItem('user',JSON.stringify(nu));window.dispatchEvent(new Event('user:refresh'));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
  const savePass=async(e)=>{e.preventDefault();setMsg('');setErr('');if(p.newPassword!==p.confirm)return setErr('Konfirmasi password tidak cocok');if((p.newPassword||'').length<6)return setErr('Password baru minimal 6 karakter');setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
  const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#edf3fb';
  const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
