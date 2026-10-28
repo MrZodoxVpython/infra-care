@@ -159,18 +159,38 @@ function Layout(){
    <div className="s-quote">Infrastruktur baik untuk masa depan kita bersama ♡</div></aside>
   <div className="app-body"><div className="top"><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..."/><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
 
-function Table({rows,admin,onChange,compact,dark,highlightFn}){
+function Table({rows,admin,onChange,compact,dark,highlightFn,variant}){
+ const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#edf3fb';const headBg=dark?'#0f172a':'#f9fbfd';
  if(compact){
   return<table className="t-compact"><thead><tr><th>Judul Pengaduan</th><th style={{textAlign:'right'}}>Tanggal</th><th style={{textAlign:'right'}}>Status</th></tr></thead><tbody>
   {rows.map((r,i)=><tr key={r.id} style={highlightFn&&highlightFn(r)?{background:'rgba(59,130,246,0.12)'}:{}}><td className="t-img"><img src={r.foto||'https://via.placeholder.com/40x40?color=ddd'} style={{borderRadius:8,objectFit:'contain',width:50,height:'auto',maxHeight:60,display:'block'}}/><div><b style={{fontSize:13,display:'block'}}>{r.judul}</b><span className="mu" style={{fontSize:12,display:'block'}}>{r.kategori} · {r.lokasi}</span></div></td><td style={{textAlign:'right'}}><span className="mu" style={{fontSize:12}}>{tgl(r.created_at)}</span></td><td style={{textAlign:'right'}}><St s={r.status} dark={dark}/></td></tr>)}
   {!rows.length&&<tr><td colSpan="3" className="mu" style={{textAlign:'center'}}>Belum ada data pengaduan.</td></tr>}
   </tbody></table>}
- const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#f1f5f9';
- return<table style={{background:tBg,color:tTxt,border:'1px solid '+tBorder,borderRadius:12}}><thead><tr><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>No.</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Tanggal</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Judul Pengaduan</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Kategori</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Lokasi</th>{admin&&<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Pelapor</th>}<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Status</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Aksi</th></tr></thead><tbody>
- {rows.map((r,i)=><tr key={r.id} style={{borderBottom:'1px solid '+tBorder, ...(highlightFn&&highlightFn(r)?{background:dark?'rgba(59,130,246,0.18)':'rgba(59,130,246,0.12)',transition:'background 0.5s'}:{})}}><td style={{color:tTxt}}>{i+1}</td><td style={{color:tSub}}>{tgl(r.created_at)}</td><td><b style={{color:tTxt}}>{r.judul}</b><br/><span className="mu" style={{color:tSub}}>{r.kode}</span></td><td style={{color:tSub}}>{r.kategori}</td><td style={{color:tSub}}>{r.lokasi}</td>{admin&&<td style={{color:tSub}}>{r.pelapor}</td>}
- <td>{onChange?<select className="in" style={{padding:6,background:dark?'#334155':'#fff',color:dark?'#e2e8f0':'#14306b',borderColor:tBorder}} value={r.status} onChange={e=>onChange(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select>:<St s={r.status}/>}</td>
- <td><Link className="btn s" to={'/app/tracking/'+r.kode} style={{background:dark?'#334155':'#eaf2fd',color:dark?'#e2e8f0':'#1565d8',border:'1px solid '+tBorder}}>👁 Detail</Link></td></tr>)}
- {!rows.length&&<tr><td colSpan="8" className="mu" style={{textAlign:'center',color:tSub}}>Belum ada data pengaduan.</td></tr>}</tbody></table>}
+ if(variant==='rw'){
+  return<table className="rw-table"><thead><tr><th>No.</th><th>Pengaduan</th><th>Kategori</th><th>Lokasi</th>{admin&&<th>Pelapor</th>}<th>Tanggal</th><th style={{textAlign:'center'}}>Status</th><th style={{textAlign:'right'}}>Aksi</th></tr></thead><tbody>
+  {rows.map((r,i)=><tr key={r.id} className={highlightFn&&highlightFn(r)?'rw-row-hot':undefined}>
+    <td className="rw-cell-no">{String(i+1).padStart(2,'0')}</td>
+    <td><b className="rw-title">{r.judul}</b><span className="rw-code">{r.kode}</span></td>
+    <td><span className="rw-chip">{r.kategori}</span></td>
+    <td><span className="rw-loc" title={r.lokasi}>{r.lokasi}</span></td>
+    {admin&&<td className="rw-cell-sub">{r.pelapor}</td>}
+    <td className="rw-cell-date">{tgl(r.created_at)}</td>
+    <td style={{textAlign:'center'}}>{onChange?<select className="in" style={{padding:'6px 8px',fontSize:12}} value={r.status} onChange={e=>onChange(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select>:<St s={r.status}/>}</td>
+    <td style={{textAlign:'right'}}><Link className="rw-action" to={'/app/tracking/'+r.kode} title="Lihat detail">👁 Lihat Detail</Link></td>
+  </tr>)}
+  {!rows.length&&<tr><td colSpan={admin?8:7}><div className="rw-empty"><div className="rw-empty-ic">📭</div><p>Belum ada data pengaduan.</p></div></td></tr>}
+  </tbody></table>}
+ return<table style={{width:'100%',background:tBg,color:tTxt,borderCollapse:'separate',borderSpacing:0}}><thead><tr><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 24px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>No.</th><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>Pengaduan</th><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>Kategori</th><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>Lokasi</th>{admin&&<th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>Pelapor</th>}<th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'left',borderBottom:'1px solid '+tBorder}}>Tanggal</th><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 16px',textAlign:'center',borderBottom:'1px solid '+tBorder}}>Status</th><th style={{background:headBg,color:tSub,fontWeight:600,fontSize:12,textTransform:'uppercase',letterSpacing:0.5,padding:'12px 24px',textAlign:'right',borderBottom:'1px solid '+tBorder}}>Aksi</th></tr></thead><tbody>
+ {rows.map((r,i)=><tr key={r.id} style={{...(highlightFn&&highlightFn(r)?{background:dark?'rgba(59,130,246,0.18)':'rgba(59,130,246,0.1)',transition:'background 0.5s'}:{})}}>
+   <td style={{padding:'14px 24px',color:tSub,fontSize:13,borderBottom:'1px solid '+tBorder}}>{i+1}</td>
+   <td style={{padding:'14px 16px',borderBottom:'1px solid '+tBorder}}><div><b style={{color:tTxt,fontSize:14,display:'block'}}>{r.judul}</b><span style={{color:tSub,fontSize:12}}>{r.kode}</span></div></td>
+   <td style={{padding:'14px 16px',borderBottom:'1px solid '+tBorder}}><span style={{padding:'4px 10px',borderRadius:10,background:dark?'#334155':'#f1f5f9',color:tSub,fontSize:12}}>{r.kategori}</span></td>
+   <td style={{padding:'14px 16px',color:tSub,fontSize:13,borderBottom:'1px solid '+tBorder,maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}} title={r.lokasi}>{r.lokasi}</td>
+   {admin&&<td style={{padding:'14px 16px',color:tSub,fontSize:13,borderBottom:'1px solid '+tBorder}}>{r.pelapor}</td>}
+   <td style={{padding:'14px 16px',color:tSub,fontSize:13,borderBottom:'1px solid '+tBorder}}>{tgl(r.created_at)}</td>
+   <td style={{padding:'14px 16px',textAlign:'center',borderBottom:'1px solid '+tBorder}}>{onChange?<select className="in" style={{padding:6,background:dark?'#0f172a':'#fff',color:tTxt,borderColor:tBorder,fontSize:12}} value={r.status} onChange={e=>onChange(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select>:<St s={r.status}/>}</td>
+   <td style={{padding:'14px 24px',textAlign:'right',borderBottom:'1px solid '+tBorder}}><Link to={'/app/tracking/'+r.kode} style={{display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',borderRadius:10,background:dark?'#1e3a5f':'#eef6ff',color:dark?'#60a5fa':'#2563eb',fontSize:13,fontWeight:600,textDecoration:'none'}} title="Lihat detail">👁 Lihat Detail</Link></td></tr>)}
+ {!rows.length&&<tr><td colSpan={admin?8:7} style={{padding:'60px 20px',textAlign:'center'}}><div style={{fontSize:40,marginBottom:12,opacity:0.5}}>📭</div><p style={{color:tSub,margin:0}}>Belum ada data pengaduan.</p></td></tr>}</tbody></table>}
 
 function Dashboard(){
  const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]),nav=useNavigate();
@@ -321,7 +341,8 @@ function Tracking(){
 
 function Riwayat(){
  const loc=useLocation();
- const[rows,setRows]=useState([]),[tab,setTab]=useState(loc.state?.focusTab||'Semua'),[sort,setSort]=useState('desc'),[highlight,setHighlight]=useState(false);
+ const[rows,setRows]=useState([]),[tab,setTab]=useState(loc.state?.focusTab||'Semua'),[sort,setSort]=useState('desc'),[highlight,setHighlight]=useState(false),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
+ useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{api('/complaints').then(setRows).catch(()=>setRows([]))},[]);
  useEffect(()=>{
    if(loc.state?.focusTab){
@@ -341,10 +362,61 @@ function Riwayat(){
    if(tab==='Ditolak') return r.status==='Ditolak';
    return false;
  };
- return<div className="grid2"><div className="stk"><div className="banner"><h2>🕘 Riwayat Pengaduan</h2><p className="mu">Berikut adalah daftar pengaduan yang pernah Anda buat.</p></div>
-  <div className="tabs">{Object.keys(G).map(t=><button key={t} className={tab===t?'on':''} onClick={()=>setTab(t)}>{t} ({rows.filter(G[t]).length})</button>)}<select className="in" style={{width:170,marginLeft:'auto'}} value={sort} onChange={e=>setSort(e.target.value)}><option value="desc">Urutkan: Terbaru</option><option value="asc">Urutkan: Terlama</option></select></div>
-  <div className="card"><Table rows={v} highlightFn={getHighlight}/></div></div>
-  <div className="card"><h3>Ringkasan Pengaduan</h3><div className="row2" style={{marginTop:12}}>{Object.keys(G).filter(k=>k!=='Semua').map(t=><div key={t} className="card">{t}<b style={{display:'block',fontSize:26}}>{rows.filter(G[t]).length}</b></div>)}</div></div></div>}
+ const tabIcons={Semua:'📋',Diproses:'⏳',Ditanggapi:'🔧',Selesai:'✅',Ditolak:'❌'};
+ const meta={
+  Diproses:{ic:'⏳',col:'#3b82f6',bg:'#e8f1ff'},
+  Ditanggapi:{ic:'🔧',col:'#f59e0b',bg:'#fff4e2'},
+  Selesai:{ic:'✅',col:'#22c55e',bg:'#e6f8ee'},
+  Ditolak:{ic:'❌',col:'#ef4444',bg:'#fdeaea'}
+ };
+ const total=rows.length,done=rows.filter(G.Selesai).length,active=rows.filter(G.Diproses).length+rows.filter(G.Ditanggapi).length;
+ const pctDone=total?Math.round(done/total*100):0;
+ return<div className="grid2 rw-page">
+  <div className="stk">
+   <header className="rw-hero">
+    <span className="rw-eyebrow">🕘 Riwayat Pengaduan</span>
+    <h2>Riwayat Pengaduan Anda</h2>
+    <p>Pantau seluruh pengaduan yang pernah Anda buat beserta status penanganan terbarunya.</p>
+    <div className="rw-hero-stats">
+     <div className="rw-hero-stat"><span>Total</span><b>{total}</b></div>
+     <div className="rw-hero-stat"><span>Selesai</span><b>{done}</b></div>
+     <div className="rw-hero-stat"><span>Dalam Proses</span><b>{active}</b></div>
+     <div className="rw-hero-stat"><span>Penyelesaian</span><b>{pctDone}%</b></div>
+    </div>
+   </header>
+   <section className="card rw-toolbar">
+    <div className="rw-tabs">
+     {Object.keys(G).map(t=><button key={t} className={'rw-tab'+(tab===t?' on':'')} onClick={()=>setTab(t)}><span className="rw-tab-ic">{tabIcons[t]}</span><span>{t}</span><span className="rw-tab-count">{rows.filter(G[t]).length}</span></button>)}
+    </div>
+    <div className="rw-sort">
+     <label htmlFor="rw-sort">Urutkan</label>
+     <select id="rw-sort" className="in" value={sort} onChange={e=>setSort(e.target.value)}><option value="desc">Terbaru</option><option value="asc">Terlama</option></select>
+    </div>
+   </section>
+   <section className="card rw-panel">
+    <div className="rw-panel-head">
+     <div><h3>Daftar Pengaduan</h3><p>Menampilkan {v.length} pengaduan</p></div>
+     <span className="rw-filter-badge">{tabIcons[tab]} {tab}</span>
+    </div>
+    <div className="rw-panel-body"><Table rows={v} highlightFn={getHighlight} variant="rw"/></div>
+   </section>
+  </div>
+  <div className="stk">
+   <section className="card rw-side">
+    <div className="rw-side-head"><div><h3>Ringkasan Status</h3><p>Distribusi pengaduan Anda</p></div><span className="rw-side-total">{total} total</span></div>
+    <div className="rw-stats">
+     {Object.keys(G).filter(k=>k!=='Semua').map(t=>{const c=rows.filter(G[t]).length;const pct=total?Math.round(c/total*100):0;const m=meta[t];return<div key={t} className="rw-stat">
+      <div className="rw-stat-top"><span className="rw-stat-label"><span className="rw-stat-ic" style={{background:dark?m.col+'26':m.bg,color:m.col}}>{m.ic}</span>{t}</span><span className="rw-stat-val">{c}<small>{pct}%</small></span></div>
+      <div className="rw-bar"><i style={{width:pct+'%',background:m.col}}/></div>
+     </div>})}
+    </div>
+   </section>
+   <section className="card rw-side rw-info">
+    <h3>Informasi</h3>
+    <div className="rw-info-tip"><span>💡</span><p>Klik salah satu status di atas untuk memfilter daftar pengaduan. Gunakan menu urutkan untuk mengubah pengurutan berdasarkan tanggal.</p></div>
+   </section>
+  </div>
+ </div>}
 function Notif(){
  const[rows,setRows]=useState([]),[tab,setTab]=useState('Semua');const load=()=>api('/notifications').then(setRows);useEffect(()=>{load()},[]);
  const [dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));

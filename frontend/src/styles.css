@@ -406,57 +406,12 @@ html.dark .btn-selesai{
   color:#fff !important;
 }
 /* --- Teks tabel tetap terbaca --- */
-html.dark .rw-table b,
-html.dark .rw-table span,
-html.dark .rw-table p,
 html.dark .tracking-table b,
 html.dark .tracking-table span,
 html.dark .tracking-table p,
 html.dark .tbl b,
 html.dark .tbl span,
 html.dark .tbl p{
-  color:#e2e8f0 !important;
-  font-weight:500 !important;
-}
-/* ===== EXTREME: Semua table di halaman Riwayat gelap total ===== */
-html.dark .grid2 table,
-html.dark .stk table,
-html.dark .card table,
-html.dark table{
-  background:#1e293b !important;
-  color:#e2e8f0 !important;
-}
-html.dark .grid2 th,
-html.dark .stk th,
-html.dark .card th,
-html.dark table th{
-  background:#0f172a !important;
-  color:#e2e8f0 !important;
-  border-bottom:#334155 2solid !important;
-  border-top:none !important;
-}
-html.dark .grid2 td,
-html.dark .stk td,
-html.dark .card td,
-html.dark table td{
-  background:#1e293b !important;
-  color:#e2e8f0 !important;
-  border-bottom:#334155 1solid !important;
-  border-top:none !important;
-}
-/* Teks di dalam tabel: b, span, p */
-html.dark .grid2 b,
-html.dark .grid2 span,
-html.dark .grid2 p,
-html.dark .stk b,
-html.dark .stk span,
-html.dark .stk p,
-html.dark .card b,
-html.dark .card span,
-html.dark .card p,
-html.dark table b,
-html.dark table span,
-html.dark table p{
   color:#e2e8f0 !important;
   font-weight:500 !important;
 }
@@ -534,13 +489,7 @@ html.dark .card .btn-selesai{
   background:#22c55e !important;
   color:#fff !important;
 }
-/* Fallback total supaya tidak ada putih sedikit pun */
-html.dark .grid2 *,
-html.dark .stk *,
-html.dark .card *{
-  background:#1e293b !important;
-  color:#e2e8f0 !important;
-}
+/* Fallback input gelap */
 html.dark .grid2 .in,
 html.dark .grid2 select{
   background:#1e293b !important;
@@ -550,52 +499,6 @@ html.dark .stk .in,
 html.dark .stk select{
   background:#1e293b !important;
   color:#e2e8f0 !important;
-}
-
-/* --- TAMBAHAN INI: Semua elemen di dalam table Riwayat gelap total --- */
-/* Semua tag b, span, p, a, button di dalam table gelap */
-html.dark .grid2 table b,
-html.dark .grid2 table span,
-html.dark .grid2 table p,
-html.dark .grid2 table a,
-html.dark .grid2 table button,
-html.dark .stk table b,
-html.dark .stk table span,
-html.dark .stk table p,
-html.dark .stk table a,
-html.dark .stk table button,
-html.dark .card table b,
-html.dark .card table span,
-html.dark .card table p,
-html.dark .card table a,
-html.dark .card table button{
-  color:#e2e8f0 !important;
-  background:#1e293b !important;
-}
-/* Pastikan status badge punya warna gelap */
-html.dark .stk .card .st,
-html.dark .stk .card .status,
-html.dark .grid2 .card .st,
-html.dark .grid2 .card .status{
-  background:rgba(124,54,234,.12) !important;
-  color:#a78bfa !important;
-  border:#4c1d9a 1solid !important;
-  padding:4px 10px !important;
-  border-radius:20px !important;
-  font-size:12px !important;
-}
-/* Semua teks di dalam td table gelap */
-html.dark .grid2 table td span,
-html.dark .grid2 table td b,
-html.dark .grid2 table td p,
-html.dark .stk table td span,
-html.dark .stk table td b,
-html.dark .stk table td p,
-html.dark .card table td span,
-html.dark .card table td b,
-html.dark .card table td p{
-  color:#e2e8f0 !important;
-  background:#1e293b !important;
 }
 
 /* --- TAMBAHAN: Tabs/Filters di Riwayat dark mode --- */
@@ -745,3 +648,148 @@ html.dark .prof-item{background:#1e293b;borderColor:#334155}
 html.dark .prof-item-left b{color:#f1f5f9}
 .prof-item-left span.mu{fontSize:12px;color:var(--mu)}
 html.dark .prof-item-left span.mu{color:#94a3b8}
+
+/* ============================================================
+   RIWAYAT PAGE — kartu & tabel yang lebih rapi dan profesional
+   ============================================================ */
+.rw-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:20px;padding:24px 26px;background:linear-gradient(120deg,#eaf4ff 0%,#f6fbff 55%,#eef7ff 100%);border:1px solid #dcebfb;box-shadow:0 8px 24px rgba(30,90,180,.07)}
+.rw-hero::before{content:'';position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(21,101,216,.16),rgba(21,101,216,0) 70%);z-index:-1}
+.rw-hero::after{content:'';position:absolute;right:24px;bottom:-60px;width:150px;height:150px;border-radius:50%;border:18px solid rgba(21,101,216,.06);z-index:-1}
+.rw-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--b)}
+.rw-hero h2{font-size:23px;line-height:1.25;color:var(--bd);margin:8px 0 6px}
+.rw-hero p{margin:0;max-width:560px;font-size:13.5px;line-height:1.6;color:var(--mu)}
+.rw-hero-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.rw-hero-stat{display:flex;flex-direction:column;gap:2px;min-width:96px;padding:10px 14px;border-radius:12px;background:rgba(255,255,255,.72);border:1px solid rgba(21,101,216,.12)}
+.rw-hero-stat span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6b7fa6}
+.rw-hero-stat b{font-size:20px;line-height:1.1;color:#14306b;font-variant-numeric:tabular-nums}
+
+.rw-toolbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px}
+.rw-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.rw-tab{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;border:1px solid #e2ecf8;background:#fff;color:#5a729a;font-size:12.5px;font-weight:600;cursor:pointer;transition:background .18s,border-color .18s,color .18s,box-shadow .18s}
+.rw-tab:hover{border-color:#c9def7;background:#f6fbff;color:var(--b)}
+.rw-tab.on{background:var(--b);border-color:var(--b);color:#fff;box-shadow:0 6px 16px rgba(21,101,216,.24)}
+.rw-tab-ic{font-size:13px;line-height:1}
+.rw-tab-count{min-width:22px;padding:1px 7px;border-radius:999px;background:#eef4fc;color:#4b6a99;font-size:11px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.rw-tab.on .rw-tab-count{background:rgba(255,255,255,.22);color:#fff}
+.rw-sort{display:flex;align-items:center;gap:8px;margin-left:auto}
+.rw-sort label{margin:0;font-size:12px;font-weight:600;color:var(--mu);white-space:nowrap}
+.rw-sort .in{width:auto;min-width:132px;padding:9px 12px;border-radius:10px;font-size:13px}
+
+.rw-panel{padding:0;overflow:hidden}
+.rw-panel-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 22px;border-bottom:1px solid #edf3fb}
+.rw-panel-head h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 3px}
+.rw-panel-head p{margin:0;font-size:12px;color:var(--mu)}
+.rw-filter-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#eef6ff;border:1px solid #dcebfb;color:#2563eb;font-size:11.5px;font-weight:700;white-space:nowrap}
+.rw-panel-body{overflow-x:auto}
+
+.rw-table{width:100%;border-collapse:collapse;font-size:13px}
+.rw-table th{background:#f8fbff;color:#7a8ca8;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:12px 16px;text-align:left;white-space:nowrap;border-bottom:1px solid #e8f0fa}
+.rw-table td{padding:14px 16px;border-top:0;border-bottom:1px solid #f1f6fc;color:#5a729a;vertical-align:middle}
+.rw-table tbody tr{transition:background .15s}
+.rw-table tbody tr:hover td{background:#f7fbff}
+.rw-table tbody tr:last-child td{border-bottom:0}
+.rw-row-hot td{background:#eff7ff !important}
+.rw-row-hot td:first-child{box-shadow:inset 3px 0 0 var(--b)}
+.rw-cell-no{width:56px;color:#94a3b8;font-weight:700;font-variant-numeric:tabular-nums}
+.rw-title{display:block;margin-bottom:3px;color:#14306b;font-size:13.5px;font-weight:700;line-height:1.35}
+.rw-code{color:#8ea0bb;font-size:11.5px;font-weight:600;letter-spacing:.02em}
+.rw-chip{display:inline-block;padding:3px 10px;border-radius:999px;background:#f1f6fc;border:1px solid #e6eef9;color:#4b6a99;font-size:11.5px;font-weight:600;white-space:nowrap}
+.rw-loc{display:block;max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.rw-cell-date,.rw-cell-sub{font-size:12.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.rw-action{display:inline-flex;align-items:center;gap:5px;padding:8px 13px;border-radius:9px;background:#eef6ff;border:1px solid #dbeafe;color:#2563eb;font-size:12.5px;font-weight:700;white-space:nowrap;transition:background .18s,border-color .18s,color .18s}
+.rw-action:hover{background:#e0efff;border-color:#bfdbfe;color:#1d4ed8}
+.rw-empty{padding:52px 20px;text-align:center;color:var(--mu)}
+.rw-empty-ic{font-size:38px;opacity:.55;margin-bottom:10px}
+.rw-empty p{margin:0;font-size:13px}
+
+.rw-side-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.rw-side-head h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 3px}
+.rw-side-head p{margin:0;font-size:12px;color:var(--mu)}
+.rw-side-total{padding:4px 10px;border-radius:999px;background:#eef6ff;border:1px solid #dcebfb;color:#2563eb;font-size:11px;font-weight:700;white-space:nowrap}
+.rw-stats{display:flex;flex-direction:column;gap:10px}
+.rw-stat{padding:13px 14px;border-radius:14px;background:#fbfdff;border:1px solid #eef3fa;transition:border-color .18s,box-shadow .18s}
+.rw-stat:hover{border-color:#dbe9fb;box-shadow:0 6px 16px rgba(30,90,180,.06)}
+.rw-stat-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.rw-stat-label{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:600;color:#3f5a82}
+.rw-stat-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:14px;flex-shrink:0}
+.rw-stat-val{font-size:18px;font-weight:800;line-height:1;color:#14306b;font-variant-numeric:tabular-nums}
+.rw-stat-val small{margin-left:5px;font-size:11px;font-weight:600;color:#94a3b8}
+.rw-bar{height:6px;border-radius:999px;background:#eaf2fc;overflow:hidden}
+.rw-bar i{display:block;height:100%;border-radius:999px;transition:width .35s ease}
+.rw-info h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 12px}
+.rw-info-tip{display:flex;gap:10px;padding:12px 13px;border-radius:12px;background:#f7fbff;border:1px solid #eaf2fc;color:#5a729a;font-size:12px;line-height:1.6}
+.rw-info-tip span{line-height:1.4}
+.rw-info-tip p{margin:0}
+
+/* Badge status khusus tabel Riwayat (mengalahkan inline style) */
+.rw-table .tag{padding:4px 10px !important;border-radius:999px !important;font-size:11.5px !important;font-weight:700 !important;border:1px solid transparent !important;line-height:1.4}
+.rw-table .tag.diterima,.rw-table .tag.diverifikasi{background:#efe9ff !important;color:#7a4fd6 !important;border-color:#e6dcfb !important}
+.rw-table .tag.diprioritaskan,.rw-table .tag.ditugaskan,.rw-table .tag.diproses{background:#e8f1ff !important;color:#1d4ed8 !important;border-color:#d6e6ff !important}
+.rw-table .tag.dalam-perbaikan,.rw-table .tag.sedang{background:#fff4e2 !important;color:#b45309 !important;border-color:#fde8c4 !important}
+.rw-table .tag.selesai,.rw-table .tag.rendah{background:#e6f8ee !important;color:#15803d !important;border-color:#cdf0dc !important}
+.rw-table .tag.ditolak,.rw-table .tag.tinggi{background:#fdeaea !important;color:#b91c1c !important;border-color:#fbd5d5 !important}
+
+/* Riwayat — mode gelap */
+html.dark .rw-hero{background:linear-gradient(120deg,#122036,#0f1a2b);border-color:#233449;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+html.dark .rw-hero::before{background:radial-gradient(circle at 30% 30%,rgba(59,130,246,.22),rgba(59,130,246,0) 70%)}
+html.dark .rw-hero::after{border-color:rgba(96,165,250,.08)}
+html.dark .rw-eyebrow{color:#60a5fa}
+html.dark .rw-hero h2{color:#f1f5f9}
+html.dark .rw-hero p{color:#94a3b8}
+html.dark .rw-hero-stat{background:rgba(15,23,42,.72);border-color:#243449}
+html.dark .rw-hero-stat span{color:#94a3b8}
+html.dark .rw-hero-stat b{color:#f1f5f9}
+html.dark .rw-toolbar{background:#1e293b;border:1px solid #263449}
+html.dark .rw-tab{background:#0f172a;border-color:#334155;color:#94a3b8}
+html.dark .rw-tab:hover{background:#1e293b;border-color:#475569;color:#e2e8f0}
+html.dark .rw-tab.on{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 6px 16px rgba(37,99,235,.35)}
+html.dark .rw-tab-count{background:#1e293b;color:#cbd5e1}
+html.dark .rw-tab.on .rw-tab-count{background:rgba(255,255,255,.2);color:#fff}
+html.dark .rw-sort label{color:#94a3b8}
+html.dark .rw-panel{background:#1e293b}
+html.dark .rw-panel-head{border-bottom-color:#2b3a4f}
+html.dark .rw-panel-head h3{color:#f1f5f9}
+html.dark .rw-panel-head p{color:#94a3b8}
+html.dark .rw-filter-badge{background:#1e3a5f;border-color:#1e40af;color:#93c5fd}
+html.dark .rw-table th{background:#0f172a;color:#94a3b8;border-bottom-color:#2b3a4f}
+html.dark .rw-table td{border-bottom-color:#2b3a4f;color:#cbd5e1}
+html.dark .rw-table tbody tr:hover td{background:#243247 !important}
+html.dark .rw-row-hot td{background:rgba(37,99,235,.16) !important}
+html.dark .rw-row-hot td:first-child{box-shadow:inset 3px 0 0 #60a5fa}
+html.dark .rw-cell-no{color:#64748b}
+html.dark .rw-title{color:#f1f5f9}
+html.dark .rw-code{color:#94a3b8}
+html.dark .rw-chip{background:#0f172a;border-color:#334155;color:#cbd5e1}
+html.dark .rw-loc{color:#cbd5e1}
+html.dark .rw-cell-date,html.dark .rw-cell-sub{color:#94a3b8}
+html.dark .rw-action{background:#1e3a5f;border-color:#1e40af;color:#93c5fd}
+html.dark .rw-action:hover{background:#1e40af;border-color:#2563eb;color:#fff}
+html.dark .rw-empty{color:#94a3b8}
+html.dark .rw-side{background:#1e293b}
+html.dark .rw-side-head h3,html.dark .rw-info h3{color:#f1f5f9}
+html.dark .rw-side-head p{color:#94a3b8}
+html.dark .rw-side-total{background:#1e3a5f;border-color:#1e40af;color:#93c5fd}
+html.dark .rw-stat{background:#0f172a;border-color:#263449}
+html.dark .rw-stat:hover{border-color:#3b4d68;box-shadow:0 6px 16px rgba(0,0,0,.25)}
+html.dark .rw-stat-label{color:#cbd5e1}
+html.dark .rw-stat-val{color:#f1f5f9}
+html.dark .rw-stat-val small{color:#94a3b8}
+html.dark .rw-bar{background:#334155}
+html.dark .rw-info-tip{background:#0f172a;border-color:#243449;color:#94a3b8}
+html.dark .rw-table .tag.diterima,html.dark .rw-table .tag.diverifikasi{background:rgba(124,58,237,.18) !important;color:#c4b5fd !important;border-color:rgba(124,58,237,.35) !important}
+html.dark .rw-table .tag.diprioritaskan,html.dark .rw-table .tag.ditugaskan,html.dark .rw-table .tag.diproses{background:rgba(59,130,246,.18) !important;color:#93c5fd !important;border-color:rgba(59,130,246,.35) !important}
+html.dark .rw-table .tag.dalam-perbaikan,html.dark .rw-table .tag.sedang{background:rgba(245,158,11,.18) !important;color:#fcd34d !important;border-color:rgba(245,158,11,.35) !important}
+html.dark .rw-table .tag.selesai,html.dark .rw-table .tag.rendah{background:rgba(34,197,94,.18) !important;color:#86efac !important;border-color:rgba(34,197,94,.35) !important}
+html.dark .rw-table .tag.ditolak,html.dark .rw-table .tag.tinggi{background:rgba(239,68,68,.18) !important;color:#fca5a5 !important;border-color:rgba(239,68,68,.35) !important}
+
+@media(max-width:640px){
+ .rw-hero{padding:20px}
+ .rw-hero h2{font-size:20px}
+ .rw-hero-stats{gap:8px}
+ .rw-hero-stat{flex:1 1 calc(50% - 8px);min-width:0}
+ .rw-toolbar{padding:12px}
+ .rw-sort{width:100%;margin-left:0}
+ .rw-sort .in{flex:1}
+ .rw-panel-head{flex-direction:column;align-items:flex-start}
+}
+
