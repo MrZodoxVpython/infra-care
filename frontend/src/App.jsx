@@ -509,6 +509,8 @@ function Kelola(){
   <Table rows={rows} admin onChange={change} dark={dark}/><p className="mu">Menampilkan {rows.length} data pengaduan</p></div></>}
 
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
+const pwScore=pw=>{if(!pw)return 0;let s=0;if(pw.length>=6)s++;if(pw.length>=10)s++;if(/[a-z]/.test(pw)&&/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw)&&/[^A-Za-z0-9]/.test(pw))s++;return Math.min(4,s)};
+const pwLabel=['','Lemah','Cukup kuat','Kuat','Sangat kuat'];
 const Profil=()=>{
  const nav=useNavigate();
  const [u,setU]=useState(getUser()||{});
@@ -516,13 +518,15 @@ const Profil=()=>{
  const [tab,setTab]=useState('profil');
  const [f,setF]=useState({nama:u.nama||'',email:u.email||'',foto:u.foto||''});
  const [p,setP]=useState({oldPassword:'',newPassword:'',confirm:''});
+ const [show,setShow]=useState({old:false,new:false,confirm:false});
  const [msg,setMsg]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);
  const [preview,setPreview]=useState(null);
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{api('/auth/me').then(d=>{setU(d);setF({nama:d.nama||'',email:d.email||'',foto:d.foto||''});localStorage.setItem('user',JSON.stringify(d));}).catch(()=>{})},[]);
  const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
  const uploadFoto=async(e)=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressImage(file);setF({...f,foto:data});setMsg('Foto dipilih. Klik Simpan Perubahan untuk menyimpan.');setErr('');}catch(x){setErr(x.message);}};
- const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);localStorage.setItem('user',JSON.stringify(nu));window.dispatchEvent(new Event('user:refresh'));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
+ const resetProfil=()=>{setF({nama:u.nama||'',email:u.email||'',foto:u.foto||''});setMsg('');setErr('')};
+ const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);setF({nama:nu.nama||'',email:nu.email||'',foto:nu.foto||''});localStorage.setItem('user',JSON.stringify(nu));window.dispatchEvent(new Event('user:refresh'));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
  const savePass=async(e)=>{e.preventDefault();setMsg('');setErr('');
    if(!p.oldPassword)return setErr('Password saat ini wajib diisi');
    if(!p.newPassword)return setErr('Password baru wajib diisi');
@@ -530,37 +534,110 @@ const Profil=()=>{
    if(!p.confirm)return setErr('Konfirmasi password baru wajib diisi');
    if(p.newPassword!==p.confirm)return setErr('Konfirmasi password baru tidak cocok');
    setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
- const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#edf3fb';
  const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
  const fotoSrc=f.foto||u.foto;
- return<div style={{maxWidth:1100,margin:'0 auto'}}><div className="banner"><h2>👤 Profil Saya</h2><p className="mu">Kelola informasi akun, foto profil, dan keamanan akun Anda.</p></div>
-  <div className="grid2" style={{alignItems:'start'}}><div className="stk"><div className="card" style={{padding:0,overflow:'hidden',background:cardBg}}>
-   <div style={{display:'flex',gap:24,alignItems:'center',padding:'28px 32px',background:dark?'linear-gradient(135deg,#1e293b,#0f172a)':'linear-gradient(135deg,#f8fbff,#eef5fd)'}}><div style={{position:'relative'}}>
-     {fotoSrc?<img src={fotoSrc} onClick={()=>setPreview(fotoSrc)} style={{width:110,height:110,borderRadius:'50%',objectFit:'cover',border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)',cursor:'zoom-in'}}/>:
-     <div style={{width:110,height:110,borderRadius:'50%',display:'grid',placeItems:'center',background:'linear-gradient(135deg,var(--b),#1e40af)',color:'#fff',fontSize:38,fontWeight:800,border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)'}}>{initials}</div>}
-     <label style={{position:'absolute',right:4,bottom:4,width:36,height:36,borderRadius:'50%',background:cardBg,border:'2px solid '+borderCol,display:'grid',placeItems:'center',cursor:'pointer',boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}} title="Ubah foto profil">📷<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
+ const dirty=f.nama!==(u.nama||'')||f.email!==(u.email||'')||f.foto!==(u.foto||'');
+ const score=pwScore(p.newPassword);
+ const matchOk=p.confirm&&p.newPassword===p.confirm;
+ const passReady=!!(p.oldPassword&&p.newPassword.length>=6&&matchOk);
+ const filled=[u.nama,u.email,u.foto].filter(Boolean).length;
+ const complete=Math.round(filled/3*100);
+ const switchTab=t=>{setTab(t);setMsg('');setErr('')};
+ return<div className="pf-page">
+  <section className="pf-hero">
+   <span className="pf-eyebrow">👤 Akun Saya</span>
+   <h2>Profil & Keamanan Akun</h2>
+   <p>Kelola identitas, foto profil, dan kredensial akun Anda agar data tetap akurat serta aman digunakan.</p>
+   <div className="pf-hero-meta">
+    <span className="pf-meta-chip">✉️ {u.email||'Email belum diisi'}</span>
+    <span className="pf-meta-chip">🎫 {ROLE[u.role]||'Pengguna'}</span>
+    <span className="pf-meta-chip ok"><i/>Akun Aktif</span>
    </div>
-   <div style={{flex:1}}><h2 style={{color:cardText,marginBottom:6}}>{u.nama}</h2><p style={{color:cardSub,marginBottom:10}}>{u.email} • {ROLE[u.role]}</p><div style={{display:'flex',gap:10,flexWrap:'wrap'}}><span style={{padding:'4px 12px',borderRadius:20,background:dark?'#1e3a5f':'#e8f3ff',color:dark?'#60a5fa':'var(--b)',fontSize:12,fontWeight:600}}>{ROLE[u.role]}</span><span style={{padding:'4px 12px',borderRadius:20,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:12,fontWeight:600}}>Akun Aktif</span></div></div></div>
-   <div style={{display:'flex',gap:0,borderBottom:'1px solid '+borderCol}}><button onClick={()=>setTab('profil')} style={{flex:1,padding:'14px 20px',border:'none',background:'transparent',color:tab==='profil'?cardText:cardSub,fontWeight:600,cursor:'pointer',borderBottom:tab==='profil'?'2px solid var(--b)':'2px solid transparent',marginBottom:-1}}>Informasi Profil</button><button onClick={()=>setTab('keamanan')} style={{flex:1,padding:'14px 20px',border:'none',background:'transparent',color:tab==='keamanan'?cardText:cardSub,fontWeight:600,cursor:'pointer',borderBottom:tab==='keamanan'?'2px solid var(--b)':'2px solid transparent',marginBottom:-1}}>Keamanan</button></div>
-   {tab==='profil'&&<form onSubmit={saveProfil} style={{padding:'28px 32px',display:'flex',flexDirection:'column',gap:18}}>
-    <div className="row2"><div><label style={{color:cardText}}>Nama Lengkap</label><input className="in" value={f.nama} onChange={e=>setF({...f,nama:e.target.value})} placeholder="Masukkan nama lengkap"/></div><div><label style={{color:cardText}}>Email</label><input className="in" type="email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} placeholder="Masukkan email"/></div></div>
-    <div><label style={{color:cardText}}>URL Foto Profil (Opsional)</label><input className="in" value={f.foto} onChange={e=>setF({...f,foto:e.target.value})} placeholder="Atau tempel URL gambar atau gunakan upload foto di atas"/></div>
-    {msg&&<div style={{padding:'10px 14px',borderRadius:10,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:13}}>✓ {msg}</div>}
-    {err&&<div className="err">{err}</div>}
-    <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}><button type="button" className="btn s" onClick={()=>setF({nama:u.nama||'',email:u.email||'',foto:u.foto||''})}>Batal</button><button className="btn" disabled={busy}>{busy?'Menyimpan...':'Simpan Perubahan'}</button></div>
-   </form>}
-   {tab==='keamanan'&&<form onSubmit={savePass} style={{padding:'28px 32px',display:'flex',flexDirection:'column',gap:18}}>
-    <div><label style={{color:cardText}}>Password Saat Ini</label><input className="in" type="password" value={p.oldPassword} onChange={e=>setP({...p,oldPassword:e.target.value})} placeholder="Masukkan password saat ini"/></div>
-    <div className="row2"><div><label style={{color:cardText}}>Password Baru</label><input className="in" type="password" value={p.newPassword} onChange={e=>setP({...p,newPassword:e.target.value})} placeholder="Minimal 6 karakter"/></div><div><label style={{color:cardText}}>Konfirmasi Password Baru</label><input className="in" type="password" value={p.confirm} onChange={e=>setP({...p,confirm:e.target.value})} placeholder="Ulangi password baru"/></div></div>
-    {msg&&<div style={{padding:'10px 14px',borderRadius:10,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:13}}>✓ {msg}</div>}
-    {err&&<div className="err">{err}</div>}
-    <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}><button type="button" className="btn s" onClick={()=>{setP({oldPassword:'',newPassword:'',confirm:''});setMsg('');setErr('');}}>Batal</button><button className="btn" disabled={busy}>{busy?'Mengubah...':'Ubah Password'}</button></div>
-   </form>}
-  </div></div>
-  <div className="stk"><div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:16}}>Informasi Akun</h3><div style={{display:'flex',flexDirection:'column',gap:14}}><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Role</span><span style={{color:cardText,fontWeight:600}}>{ROLE[u.role]}</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Status</span><span style={{color:'#22c55e',fontWeight:600}}>Aktif</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">User ID</span><span style={{color:cardSub,fontSize:13}}>#{u.id}</span></div></div></div>
-   <div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:12}}>Tips Keamanan</h3><ul style={{margin:0,paddingLeft:18,color:cardSub,fontSize:13,display:'flex',flexDirection:'column',gap:8}}><li>Gunakan password yang kuat dan unik</li><li>Jangan bagikan kredensial akun Anda</li><li>Perbarui informasi kontak secara berkala</li></ul></div></div></div>
-  {preview&&<div onClick={()=>setPreview(null)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.9)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999,cursor:'zoom-out'}}><img src={preview} style={{maxWidth:'90vw',maxHeight:'90vh',borderRadius:16,boxShadow:'0 30px 80px rgba(0,0,0,0.7)'}} onClick={e=>e.stopPropagation()}/></div>}
-</div>};
+  </section>
+  <div className="pf-layout">
+   <div className="pf-col">
+    <div className="pf-card">
+     <div className="pf-cover">
+      <div className="pf-avatar-wrap">
+       {fotoSrc?<img src={fotoSrc} alt="Foto profil" onClick={()=>setPreview(fotoSrc)} style={{cursor:'zoom-in'}}/>:<div className="pf-avatar">{initials}</div>}
+       <label className="pf-cam" title="Ubah foto profil">📷<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
+      </div>
+      <div className="pf-ident">
+       <h3>{u.nama||'Pengguna'}</h3>
+       <p>{ROLE[u.role]||'Pengguna'} • ID #{u.id||'-'}</p>
+       <div className="pf-badges"><span className="pf-badge role">{ROLE[u.role]||'Pengguna'}</span><span className="pf-badge ok">● Akun Aktif</span></div>
+      </div>
+     </div>
+     <div className="pf-tabs" role="tablist">
+      <button type="button" className={tab==='profil'?'on':''} onClick={()=>switchTab('profil')}>👤 Informasi Profil</button>
+      <button type="button" className={tab==='keamanan'?'on':''} onClick={()=>switchTab('keamanan')}>🔒 Keamanan</button>
+     </div>
+     {tab==='profil'&&<form className="pf-form" onSubmit={saveProfil}>
+      <div className="pf-form-head"><h4>Informasi Pribadi</h4><p>Data ini tampil pada laporan pengaduan dan notifikasi akun Anda.</p></div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Nama Lengkap</label><input className="in" value={f.nama} onChange={e=>setF({...f,nama:e.target.value})} placeholder="Masukkan nama lengkap"/><span className="pf-hint">Gunakan nama asli agar petugas mudah menghubungi Anda.</span></div>
+       <div className="pf-field"><label>Alamat Email</label><input className="in" type="email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} placeholder="Masukkan email"/><span className="pf-hint">Email dipakai untuk login dan menerima notifikasi.</span></div>
+      </div>
+      <div className="pf-field"><label>Foto Profil <span className="pf-opt">opsional</span></label>
+       <div className="pf-foto-row">
+        <div className="pf-foto-thumb">{fotoSrc?<img src={fotoSrc} alt="Pratinjau foto"/>:<span>👤</span>}</div>
+        <div className="pf-foto-input"><input className="in" value={f.foto} onChange={e=>setF({...f,foto:e.target.value})} placeholder="Tempel URL gambar profil"/><span className="pf-hint">Tempel tautan gambar, atau unggah dari perangkat (JPG/PNG, otomatis dikompres).</span></div>
+        <label className="btn s pf-upload">📷 Unggah<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
+       </div>
+      </div>
+      {msg&&<div className="pf-alert ok">✓ {msg}</div>}
+      {err&&<div className="pf-alert bad">⚠ {err}</div>}
+      <div className="pf-actions"><button type="button" className="btn s" onClick={resetProfil} disabled={!dirty||busy}>Batal</button><button className="btn" disabled={busy||!dirty}>{busy?'Menyimpan...':'Simpan Perubahan'}</button></div>
+     </form>}
+     {tab==='keamanan'&&<form className="pf-form" onSubmit={savePass}>
+      <div className="pf-form-head"><h4>Keamanan Akun</h4><p>Ganti password secara berkala dan hindari memakai password yang sama di layanan lain.</p></div>
+      <div className="pf-field"><label>Password Saat Ini</label><div className="pf-pass"><input className="in" type={show.old?'text':'password'} value={p.oldPassword} onChange={e=>setP({...p,oldPassword:e.target.value})} placeholder="Masukkan password saat ini" autoComplete="current-password"/><button type="button" onClick={()=>setShow({...show,old:!show.old})} title={show.old?'Sembunyikan':'Tampilkan'}>{show.old?'🙈':'👁️'}</button></div></div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Password Baru</label><div className="pf-pass"><input className="in" type={show.new?'text':'password'} value={p.newPassword} onChange={e=>setP({...p,newPassword:e.target.value})} placeholder="Minimal 6 karakter" autoComplete="new-password"/><button type="button" onClick={()=>setShow({...show,new:!show.new})} title={show.new?'Sembunyikan':'Tampilkan'}>{show.new?'🙈':'👁️'}</button></div>
+        <div className="pf-meter">{[1,2,3,4].map(i=><i key={i} className={i<=score?'on s'+score:''}/>)}</div>
+        <span className={score>=3?'pf-hint ok':'pf-hint'}>{p.newPassword?('Kekuatan password: '+pwLabel[score]):'Gunakan kombinasi huruf besar, kecil, angka, dan simbol.'}</span>
+       </div>
+       <div className="pf-field"><label>Konfirmasi Password Baru</label><div className="pf-pass"><input className="in" type={show.confirm?'text':'password'} value={p.confirm} onChange={e=>setP({...p,confirm:e.target.value})} placeholder="Ulangi password baru" autoComplete="new-password"/><button type="button" onClick={()=>setShow({...show,confirm:!show.confirm})} title={show.confirm?'Sembunyikan':'Tampilkan'}>{show.confirm?'🙈':'👁️'}</button></div>
+        <span className={p.confirm?(matchOk?'pf-hint ok':'pf-hint bad'):'pf-hint'}>{p.confirm?(matchOk?'✓ Password cocok':'✕ Password belum sama'):'Ulangi password baru untuk konfirmasi.'}</span>
+       </div>
+      </div>
+      {msg&&<div className="pf-alert ok">✓ {msg}</div>}
+      {err&&<div className="pf-alert bad">⚠ {err}</div>}
+      <div className="pf-actions"><button type="button" className="btn s" onClick={()=>{setP({oldPassword:'',newPassword:'',confirm:''});setMsg('');setErr('')}} disabled={busy}>Batal</button><button className="btn" disabled={busy||!passReady}>{busy?'Mengubah...':'Ubah Password'}</button></div>
+     </form>}
+    </div>
+   </div>
+   <aside className="pf-col">
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Informasi Akun</h3><span className="pf-side-tag">Terverifikasi</span></div>
+     <div className="pf-info">
+      <div className="pf-info-row"><span>ID Akun</span><b>#{u.id||'-'}</b></div>
+      <div className="pf-info-row"><span>Peran</span><b>{ROLE[u.role]||'Pengguna'}</b></div>
+      <div className="pf-info-row"><span>Status</span><b className="pf-green">Aktif</b></div>
+      <div className="pf-info-row"><span>Email</span><b>{u.email||'-'}</b></div>
+     </div>
+    </div>
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Kelengkapan Profil</h3><b className="pf-pct">{complete}%</b></div>
+     <div className="pf-bar"><i style={{width:complete+'%'}}/></div>
+     <ul className="pf-check">
+      <li className={u.nama?'on':''}>Nama lengkap</li>
+      <li className={u.email?'on':''}>Email aktif</li>
+      <li className={u.foto?'on':''}>Foto profil</li>
+     </ul>
+    </div>
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Tips Keamanan</h3></div>
+     <ul className="pf-tips">
+      <li><span>🔑</span><p>Gunakan password yang kuat, unik, dan tidak dipakai di layanan lain.</p></li>
+      <li><span>🛡️</span><p>Jangan bagikan kredensial akun Anda kepada siapa pun.</p></li>
+      <li><span>✉️</span><p>Perbarui email dan nomor kontak secara berkala.</p></li>
+     </ul>
+    </div>
+   </aside>
+  </div>
+  {preview&&<div className="pf-preview" onClick={()=>setPreview(null)}><img src={preview} alt="Foto profil" onClick={e=>e.stopPropagation()}/><button type="button" className="pf-preview-close" onClick={()=>setPreview(null)}>✕</button></div>}
+ </div>};
 const Home=()=>{
   const u=getUser();
   if(!u)return <Navigate to="/login"/>;
