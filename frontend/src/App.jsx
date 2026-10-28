@@ -154,21 +154,21 @@ function Layout(){
    <div className="s-quote">Infrastruktur baik untuk masa depan kita bersama ♡</div></aside>
   <div className="app-body"><div className="top"><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..."/><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><div className="av">{u.nama[0]}</div><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
 
-function Table({rows,admin,onChange,compact,dark}){
+function Table({rows,admin,onChange,compact,dark,highlightFn}){
  if(compact){
   return<table className="t-compact"><thead><tr><th>Judul Pengaduan</th><th style={{textAlign:'right'}}>Tanggal</th><th style={{textAlign:'right'}}>Status</th></tr></thead><tbody>
-  {rows.map((r,i)=><tr key={r.id}><td className="t-img"><img src={r.foto||'https://via.placeholder.com/40x40?color=ddd'} style={{borderRadius:8,objectFit:'contain',width:50,height:'auto',maxHeight:60,display:'block'}}/><div><b style={{fontSize:13,display:'block'}}>{r.judul}</b><span className="mu" style={{fontSize:12,display:'block'}}>{r.kategori} · {r.lokasi}</span></div></td><td style={{textAlign:'right'}}><span className="mu" style={{fontSize:12}}>{tgl(r.created_at)}</span></td><td style={{textAlign:'right'}}><St s={r.status} dark={dark}/></td></tr>)}
+  {rows.map((r,i)=><tr key={r.id} style={highlightFn&&highlightFn(r)?{background:'rgba(59,130,246,0.12)'}:{}}><td className="t-img"><img src={r.foto||'https://via.placeholder.com/40x40?color=ddd'} style={{borderRadius:8,objectFit:'contain',width:50,height:'auto',maxHeight:60,display:'block'}}/><div><b style={{fontSize:13,display:'block'}}>{r.judul}</b><span className="mu" style={{fontSize:12,display:'block'}}>{r.kategori} · {r.lokasi}</span></div></td><td style={{textAlign:'right'}}><span className="mu" style={{fontSize:12}}>{tgl(r.created_at)}</span></td><td style={{textAlign:'right'}}><St s={r.status} dark={dark}/></td></tr>)}
   {!rows.length&&<tr><td colSpan="3" className="mu" style={{textAlign:'center'}}>Belum ada data pengaduan.</td></tr>}
   </tbody></table>}
  const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#f1f5f9';
  return<table style={{background:tBg,color:tTxt,border:'1px solid '+tBorder,borderRadius:12}}><thead><tr><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>No.</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Tanggal</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Judul Pengaduan</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Kategori</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Lokasi</th>{admin&&<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Pelapor</th>}<th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Status</th><th style={{background:tBg,color:tTxt,borderBottom:'1px solid '+tBorder}}>Aksi</th></tr></thead><tbody>
- {rows.map((r,i)=><tr key={r.id} style={{borderBottom:'1px solid '+tBorder}}><td style={{color:tTxt}}>{i+1}</td><td style={{color:tSub}}>{tgl(r.created_at)}</td><td><b style={{color:tTxt}}>{r.judul}</b><br/><span className="mu" style={{color:tSub}}>{r.kode}</span></td><td style={{color:tSub}}>{r.kategori}</td><td style={{color:tSub}}>{r.lokasi}</td>{admin&&<td style={{color:tSub}}>{r.pelapor}</td>}
+ {rows.map((r,i)=><tr key={r.id} style={{borderBottom:'1px solid '+tBorder, ...(highlightFn&&highlightFn(r)?{background:dark?'rgba(59,130,246,0.18)':'rgba(59,130,246,0.12)',transition:'background 0.5s'}:{})}}><td style={{color:tTxt}}>{i+1}</td><td style={{color:tSub}}>{tgl(r.created_at)}</td><td><b style={{color:tTxt}}>{r.judul}</b><br/><span className="mu" style={{color:tSub}}>{r.kode}</span></td><td style={{color:tSub}}>{r.kategori}</td><td style={{color:tSub}}>{r.lokasi}</td>{admin&&<td style={{color:tSub}}>{r.pelapor}</td>}
  <td>{onChange?<select className="in" style={{padding:6,background:dark?'#334155':'#fff',color:dark?'#e2e8f0':'#14306b',borderColor:tBorder}} value={r.status} onChange={e=>onChange(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select>:<St s={r.status}/>}</td>
  <td><Link className="btn s" to={'/app/tracking/'+r.kode} style={{background:dark?'#334155':'#eaf2fd',color:dark?'#e2e8f0':'#1565d8',border:'1px solid '+tBorder}}>👁 Detail</Link></td></tr>)}
  {!rows.length&&<tr><td colSpan="8" className="mu" style={{textAlign:'center',color:tSub}}>Belum ada data pengaduan.</td></tr>}</tbody></table>}
 
 function Dashboard(){
- const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]);
+ const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]),nav=useNavigate();
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark)},[dark]);
  useEffect(()=>{api('/stats').then(setS);api('/complaints').then(setRows)},[]);
@@ -179,16 +179,17 @@ function Dashboard(){
  const cardSub=dark?'#94a3b8':'#6b7fa6';
  const borderCol=dark?'#334155':'#edf3fb';
  const progBg=dark?'#334155':'#e8f0fb';
+ const goToRiwayat=(tab)=>{nav(m?'/app/riwayat':'/app/kelola',{state:{focusTab:tab}})};
  const STATS=m?[
-  ['Total Pengaduan',s.total,'Dari semua laporan Anda','📄','#1565d8'],
-  ['Diproses',s.diproses,'Sedang diverifikasi / diproses','⏳','#f59e0b'],
-  ['Dalam Perbaikan',s.perbaikan,'Sedang ditangani petugas','🔧','#ef4444'],
-  ['Selesai',s.selesai,'Telah ditangani','✅','#22c55e']
+  ['Total Pengaduan',s.total,'Dari semua laporan Anda','📄','#1565d8','Semua'],
+  ['Diproses',s.diproses,'Sedang diverifikasi / diproses','⏳','#f59e0b','Diproses'],
+  ['Dalam Perbaikan',s.perbaikan,'Sedang ditangani petugas','🔧','#ef4444','Ditanggapi'],
+  ['Selesai',s.selesai,'Telah ditangani','✅','#22c55e','Selesai']
  ]:[
-  ['Total Pengaduan',s.total,'Seluruh pengaduan masuk','📄','#1565d8'],
-  ['Dalam Proses',s.diproses+s.perbaikan,'Sedang ditangani','⏳','#f59e0b'],
-  ['Selesai',s.selesai,'Telah ditangani','✅','#22c55e'],
-  ['Ditolak',s.ditolak,'Tidak memenuhi syarat','❌','#ef4444']
+  ['Total Pengaduan',s.total,'Seluruh pengaduan masuk','📄','#1565d8','Semua'],
+  ['Dalam Proses',s.diproses+s.perbaikan,'Sedang ditangani','⏳','#f59e0b','Diproses'],
+  ['Selesai',s.selesai,'Telah ditangani','✅','#22c55e','Selesai'],
+  ['Ditolak',s.ditolak,'Tidak memenuhi syarat','❌','#ef4444','Ditolak']
  ];
  return<>
   <div className="d-layout">
@@ -217,7 +218,7 @@ function Dashboard(){
 
    <div className="d-col-right">
     <div className="d-stats-grid">
-     {STATS.map(([l,v,d,ic,color])=>(<div key={l} className="d-stat-card"><div className="d-stat-head"><div className="d-stat-ic" style={{background:color+'15',color:color}}>{ic}</div><div style={{marginLeft:'auto'}}>→</div></div><div className="d-stat-body"><span className="mu" style={{fontSize:12}}>{l}</span><b style={{fontSize:24,color:color}}>{v}</b><span className="mu" style={{fontSize:12,opacity:0.8}}>{d}</span></div></div>))}
+     {STATS.map(([l,v,d,ic,color,tab])=>(<div key={l} className="d-stat-card" style={{cursor:'pointer'}} onClick={()=>goToRiwayat(tab)}><div className="d-stat-head"><div className="d-stat-ic" style={{background:color+'15',color:color}}>{ic}</div><div style={{marginLeft:'auto'}}>→</div></div><div className="d-stat-body"><span className="mu" style={{fontSize:12}}>{l}</span><b style={{fontSize:24,color:color}}>{v}</b><span className="mu" style={{fontSize:12,opacity:0.8}}>{d}</span></div></div>))}
     </div>
 
     <div className="d-map" style={{background:cardBg}}>
@@ -314,14 +315,31 @@ function Tracking(){
   <div className="card" style={{background:cardBg}}><h3 style={{color:cardText}}>Petugas yang Menangani</h3><p style={{color:cardSub}}>{c.petugas_nama?`👷 ${c.petugas_nama} — Petugas Lapangan`:'Belum ada petugas ditugaskan.'}</p></div></div></div>}
 
 function Riwayat(){
- const[rows,setRows]=useState([]),[tab,setTab]=useState('Semua'),[sort,setSort]=useState('desc');
+ const loc=useLocation();
+ const[rows,setRows]=useState([]),[tab,setTab]=useState(loc.state?.focusTab||'Semua'),[sort,setSort]=useState('desc'),[highlight,setHighlight]=useState(false);
  useEffect(()=>{api('/complaints').then(setRows).catch(()=>setRows([]))},[]);
- const G={Semua:()=>true,Diproses:r=>['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan'].includes(r.status),Ditanggapi:r=>r.status==='Dalam Perbaikan',Selesai:r=>r.status==='Selesai'};
+ useEffect(()=>{
+   if(loc.state?.focusTab){
+     setTab(loc.state.focusTab);
+     setHighlight(true);
+     const t=setTimeout(()=>setHighlight(false),10000);
+     return()=>clearTimeout(t);
+   }
+ },[loc.state]);
+ const G={Semua:()=>true,Diproses:r=>['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan'].includes(r.status),Ditanggapi:r=>r.status==='Dalam Perbaikan',Selesai:r=>r.status==='Selesai',Ditolak:r=>r.status==='Ditolak'};
  const v=rows.filter(G[tab]).sort((a,b)=>(new Date(a.created_at)-new Date(b.created_at))*(sort==='asc'?1:-1));
+ const getHighlight=(r)=>{
+   if(!highlight) return false;
+   if(tab==='Selesai') return r.status==='Selesai';
+   if(tab==='Ditanggapi') return r.status==='Dalam Perbaikan';
+   if(tab==='Diproses') return ['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan'].includes(r.status);
+   if(tab==='Ditolak') return r.status==='Ditolak';
+   return false;
+ };
  return<div className="grid2"><div className="stk"><div className="banner"><h2>🕘 Riwayat Pengaduan</h2><p className="mu">Berikut adalah daftar pengaduan yang pernah Anda buat.</p></div>
   <div className="tabs">{Object.keys(G).map(t=><button key={t} className={tab===t?'on':''} onClick={()=>setTab(t)}>{t} ({rows.filter(G[t]).length})</button>)}<select className="in" style={{width:170,marginLeft:'auto'}} value={sort} onChange={e=>setSort(e.target.value)}><option value="desc">Urutkan: Terbaru</option><option value="asc">Urutkan: Terlama</option></select></div>
-  <div className="card"><Table rows={v}/></div></div>
-  <div className="card"><h3>Ringkasan Pengaduan</h3><div className="row2" style={{marginTop:12}}>{Object.keys(G).map(t=><div key={t} className="card">{t}<b style={{display:'block',fontSize:26}}>{rows.filter(G[t]).length}</b></div>)}</div></div></div>}
+  <div className="card"><Table rows={v} highlightFn={getHighlight}/></div></div>
+  <div className="card"><h3>Ringkasan Pengaduan</h3><div className="row2" style={{marginTop:12}}>{Object.keys(G).filter(k=>k!=='Semua').map(t=><div key={t} className="card">{t}<b style={{display:'block',fontSize:26}}>{rows.filter(G[t]).length}</b></div>)}</div></div></div>}
 function Notif(){
  const[rows,setRows]=useState([]),[tab,setTab]=useState('Semua');const load=()=>api('/notifications').then(setRows);useEffect(()=>{load()},[]);
  const T=['Semua','Sistem','Pengaduan','Update'],v=rows.filter(r=>tab==='Semua'||r.tipe===tab),un=rows.filter(r=>!r.dibaca).length;
