@@ -148,7 +148,7 @@ function Layout(){
    window.addEventListener('user:refresh',syncUser);
    return()=>{window.removeEventListener('notif:refresh',onRefresh);window.removeEventListener('user:refresh',syncUser);};
  },[loc]);
- useEffect(()=>{(async()=>{try{const me=await api('/auth/me');setU(me);localStorage.setItem('user',JSON.stringify(me));}catch(_){}})();},[loc.pathname]);
+ useEffect(()=>{(async()=>{try{const me=await api('/auth/me');setU(me);localStorage.setItem('user',JSON.stringify(me));}catch(_){if(!localStorage.getItem('token')){localStorage.removeItem('user');nav('/login')}}})();},[loc.pathname]);
  if(!u?.id)return<Navigate to="/login"/>;
  const out=()=>{localStorage.clear();nav('/')};
   const [menuOpen,setMenuOpen]=useState(false);
@@ -193,10 +193,11 @@ function Table({rows,admin,onChange,compact,dark,highlightFn,variant}){
  {!rows.length&&<tr><td colSpan={admin?8:7} style={{padding:'60px 20px',textAlign:'center'}}><div style={{fontSize:40,marginBottom:12,opacity:0.5}}>📭</div><p style={{color:tSub,margin:0}}>Belum ada data pengaduan.</p></td></tr>}</tbody></table>}
 
 function Dashboard(){
- const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]),nav=useNavigate();
+ const u=getUser(),m=u.role==='masyarakat',[s,setS]=useState(null),[rows,setRows]=useState([]),[err,setErr]=useState(''),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark')),[mapCenter,setMapCenter]=useState([-7.0292,112.7461]),nav=useNavigate();
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{document.documentElement.classList.toggle('dark',dark)},[dark]);
- useEffect(()=>{api('/stats').then(setS);api('/complaints').then(setRows)},[]);
+ useEffect(()=>{api('/stats').then(setS).catch(e=>setErr(e.message));api('/complaints').then(setRows).catch(()=>{})},[]);
+ if(err)return<div className="card" style={{textAlign:'center',padding:'56px 24px',maxWidth:520,margin:'40px auto'}}><div style={{fontSize:44,marginBottom:12}}>⚠️</div><h2 style={{color:dark?'#e2e8f0':'#14306b',margin:'0 0 8px'}}>Data dashboard gagal dimuat</h2><p className="mu" style={{marginBottom:20}}>{err}</p><button className="btn" onClick={()=>window.location.reload()}>🔄 Muat Ulang</button></div>;
  if(!s)return<p>Memuat...</p>;
  const tot=s.total||1;
  const cardBg=dark?'#1e293b':'#fff';

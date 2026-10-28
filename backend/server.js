@@ -51,7 +51,12 @@ const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
 const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error('WRAP ERROR:',e.stack||e.message);res.status(500).json({message:'Terjadi kesalahan server: '+e.message})});
 const auth=roles=>(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),SECRET)}catch{return res.status(401).json({message:'Belum login'})}
  if(roles&&!roles.includes(req.user.role))return res.status(403).json({message:'Tidak diizinkan'});next()};
-const sign=u=>{const user={id:u.id,nama:u.nama,email:u.email,role:u.role,foto:u.foto||null};return{token:jwt.sign(user,SECRET,{expiresIn:'7d'}),user}};
+// Payload JWT sengaja TIDAK memuat foto profil (base64). Foto bisa puluhan KB
+// dan membuat header Authorization membengkak sampai Vercel menolak request
+// dengan 494 Request Header Too Large. Foto tetap dikirim lewat objek `user`.
+const sign=u=>{const user={id:u.id,nama:u.nama,email:u.email,role:u.role,foto:u.foto||null};
+ const payload={id:u.id,nama:u.nama,email:u.email,role:u.role};
+ return{token:jwt.sign(payload,SECRET,{expiresIn:'7d'}),user}};
 pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS foto TEXT").catch(()=>{});
 
 app.post('/api/auth/login',wrap(async(req,res)=>{const[u]=await q('select * from users where email=$1',[req.body.email]);
@@ -63,6 +68,8 @@ app.post('/api/auth/register',wrap(async(req,res)=>{const{nama,email,password}=r
 app.get('/api/auth/me',auth(),wrap(async(req,res)=>{const[u]=await q('select id,nama,email,role,foto from users where id=$1',[req.user.id]);res.json(u||req.user)}));
 app.put('/api/auth/me',auth(),wrap(async(req,res)=>{const{nama,email,foto}=req.body;
  if(email){const e=await q('select 1 from users where email=$1 and id<>$2',[email,req.user.id]);if(e.length)return res.status(400).json({message:'Email sudah digunakan'})}
+ // Batasi ukuran foto (base64) supaya respons /auth/me tetap ringan.
+ if(foto&&foto.length>400000)return res.status(400).json({message:'Foto profil terlalu besar. Gunakan gambar di bawah 300KB.'});
  const[u]=await q('update users set nama=coalesce($1,nama), email=coalesce($2,email), foto=coalesce($3,foto) where id=$4 returning id,nama,email,role,foto',[nama||null,email||null,foto||null,req.user.id]);
  res.json(u)}));
 app.put('/api/auth/password',auth(),wrap(async(req,res)=>{const{oldPassword,newPassword}=req.body;
