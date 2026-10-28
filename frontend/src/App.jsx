@@ -19,6 +19,7 @@ const FitBounds = ({forceCenter=[-7.0292, 112.7461], forceZoom=12}) => {
   }, [map, forceCenter, forceZoom]);
   return null;
 };
+const FlyTo=({pos,zoom=16})=>{const map=useMap();useEffect(()=>{if(pos)map.flyTo(pos,zoom,{duration:.6})},[pos,zoom,map]);return null};
 const customIcon = L.icon({
    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
    iconSize: [25, 41],
@@ -626,16 +627,76 @@ function Notif(){
  </div>}
 
 function Kelola(){
- const u=getUser(),[rows,setRows]=useState([]),[f,setF]=useState({q:'',kategori:'',status:''}),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
- useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
- const load=()=>api('/complaints?'+new URLSearchParams(Object.fromEntries(Object.entries(f).filter(([,v])=>v)))).then(setRows);useEffect(()=>{load()},[f]);
- const change=async(r,status)=>{await api(`/complaints/${r.id}/status`,{method:'PATCH',body:{status,catatan:`Status diubah oleh ${u.nama}`}});load()};
- return<><div className="banner"><h2>📋 {u.role==='admin'?'Kelola Pengaduan':'Tugas Pengaduan'}</h2><p>Pantau, verifikasi, dan tindak lanjuti semua pengaduan masyarakat.</p></div>
-  <div className="card"><div className="row2" style={{gridTemplateColumns:'2fr 1fr 1fr',marginBottom:14}}><input className="in" placeholder="Cari berdasarkan ID, judul, atau kategori..." value={f.q} onChange={e=>setF({...f,q:e.target.value})}/>
-  <select className="in" value={f.kategori} onChange={e=>setF({...f,kategori:e.target.value})}><option value="">Semua Kategori</option>{KAT.map(k=><option key={k}>{k}</option>)}</select>
-  <select className="in" value={f.status} onChange={e=>setF({...f,status:e.target.value})}><option value="">Semua Status</option>{STATUS.map(k=><option key={k}>{k}</option>)}</select></div>
-  <Table rows={rows} admin onChange={change} dark={dark}/><p className="mu">Menampilkan {rows.length} data pengaduan</p></div></>}
+ const u=getUser(),isAdmin=u.role==='admin';
+ const [rows,setRows]=useState([]),[petugas,setPetugas]=useState([]),[f,setF]=useState({q:'',kategori:'',status:'',urgensi:'',petugas_id:''});
+ const [msg,setMsg]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(null);
+ const load=()=>api('/complaints').then(d=>{setRows(d);setErr('')}).catch(e=>setErr(e.message));
+ useEffect(()=>{load()},[]);
+ useEffect(()=>{if(isAdmin)api('/users?role=petugas').then(setPetugas).catch(()=>{})},[isAdmin]);
+ const change=async(r,status)=>{setBusy(r.id);setErr('');setMsg('');try{const d=await api(`/complaints/${r.id}/status`,{method:'PATCH',body:{status,catatan:`Status diubah oleh ${u.nama}`}});setRows(x=>x.map(y=>y.id===d.id?{...y,...d}:y));setMsg(`Status ${r.kode} diperbarui menjadi ${status}.`)}catch(x){setErr(x.message)}setBusy(null)};
+ const assign=async(r,pid)=>{setBusy(r.id);setErr('');setMsg('');try{const d=await api(`/complaints/${r.id}/assign`,{method:'PATCH',body:{petugas_id:pid?Number(pid):null}});const p=petugas.find(x=>String(x.id)===String(pid));setRows(x=>x.map(y=>y.id===d.id?{...y,...d,petugas_nama:pid?(p?p.nama:y.petugas_nama):null}:y));setMsg(pid?`${r.kode} ditugaskan kepada ${p?p.nama:'petugas'}.`:`Penugasan ${r.kode} dilepas.`)}catch(x){setErr(x.message)}setBusy(null)};
+ const del=async r=>{if(!window.confirm(`Hapus pengaduan ${r.kode}? Seluruh riwayat statusnya akan hilang permanen.`))return;setBusy(r.id);setErr('');setMsg('');try{await api(`/complaints/${r.id}`,{method:'DELETE'});setRows(x=>x.filter(y=>y.id!==r.id));setMsg(`Pengaduan ${r.kode} dihapus.`)}catch(x){setErr(x.message)}setBusy(null)};
+ const mine=r=>!r.petugas_id||String(r.petugas_id)===String(u.id);
+ const q=f.q.trim().toLowerCase();
+ const v=rows.filter(r=>(!f.kategori||r.kategori===f.kategori)&&(!f.status||r.status===f.status)&&(!f.urgensi||r.urgensi===f.urgensi)&&(!f.petugas_id||(f.petugas_id==='none'?!r.petugas_id:String(r.petugas_id)===f.petugas_id))&&(!q||[r.judul,r.kode,r.kategori,r.pelapor,r.lokasi].filter(Boolean).join(' ').toLowerCase().includes(q)));
+ const count=(...s)=>rows.filter(r=>s.includes(r.status)).length;
+ const total=rows.length,selesai=count('Selesai'),belum=count('Diterima','Diverifikasi','Diprioritaskan'),ditugaskan=count('Ditugaskan'),perbaikan=count('Dalam Perbaikan'),tanpa=rows.filter(r=>!r.petugas_id).length;
+ const reset=()=>setF({q:'',kategori:'',status:'',urgensi:'',petugas_id:''});
+ return<div className="ad-page">
+  <header className="rw-hero">
+   <span className="rw-eyebrow">📋 {isAdmin?'Kelola Pengaduan':'Tugas Pengaduan'}</span>
+   <h2>{isAdmin?'Kelola Seluruh Pengaduan Masyarakat':'Pantau & Tangani Pengaduan'}</h2>
+   <p>{isAdmin?'Verifikasi laporan, tugaskan petugas lapangan, perbarui status, dan pastikan setiap pengaduan tertangani.':'Kerjakan pengaduan yang ditugaskan kepada Anda atau ambil pengaduan yang belum ditugaskan, lalu perbarui status penanganannya.'}</p>
+   <div className="rw-hero-stats">
+    <div className="rw-hero-stat"><span>Total</span><b>{total}</b></div>
+    <div className="rw-hero-stat"><span>Belum Ditangani</span><b>{belum}</b></div>
+    <div className="rw-hero-stat"><span>Ditugaskan</span><b>{ditugaskan}</b></div>
+    <div className="rw-hero-stat"><span>Dalam Perbaikan</span><b>{perbaikan}</b></div>
+    <div className="rw-hero-stat"><span>Selesai</span><b>{selesai}</b></div>
+    {isAdmin&&<div className="rw-hero-stat"><span>Tanpa Petugas</span><b>{tanpa}</b></div>}
+   </div>
+  </header>
 
+  <section className="card ad-toolbar">
+   <div className="ad-field ad-grow"><label>Cari Pengaduan</label><input className="in" placeholder="Judul, kode, kategori, pelapor, atau lokasi..." value={f.q} onChange={e=>setF({...f,q:e.target.value})}/></div>
+   <div className="ad-field"><label>Kategori</label><select className="in" value={f.kategori} onChange={e=>setF({...f,kategori:e.target.value})}><option value="">Semua Kategori</option>{KAT.map(k=><option key={k}>{k}</option>)}</select></div>
+   <div className="ad-field"><label>Status</label><select className="in" value={f.status} onChange={e=>setF({...f,status:e.target.value})}><option value="">Semua Status</option>{STATUS.map(k=><option key={k}>{k}</option>)}</select></div>
+   <div className="ad-field"><label>Urgensi</label><select className="in" value={f.urgensi} onChange={e=>setF({...f,urgensi:e.target.value})}><option value="">Semua Urgensi</option>{['Tinggi','Sedang','Rendah'].map(k=><option key={k}>{k}</option>)}</select></div>
+   {isAdmin&&<div className="ad-field"><label>Petugas</label><select className="in" value={f.petugas_id} onChange={e=>setF({...f,petugas_id:e.target.value})}><option value="">Semua Petugas</option><option value="none">Belum Ditugaskan</option>{petugas.filter(p=>p.aktif!==false).map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}</select></div>}
+   <div className="ad-actions"><button type="button" className="btn s" onClick={reset}>Reset Filter</button></div>
+  </section>
+
+  {msg&&<div className="ad-alert ok"><span>✓</span>{msg}<button type="button" onClick={()=>setMsg('')}>✕</button></div>}
+  {err&&<div className="ad-alert bad"><span>⚠</span>{err}<button type="button" onClick={()=>setErr('')}>✕</button></div>}
+
+  <section className="card rw-panel">
+   <div className="rw-panel-head">
+    <div><h3>Daftar Pengaduan</h3><p>Menampilkan {v.length} dari {rows.length} pengaduan</p></div>
+    <span className="rw-filter-badge">{isAdmin?'Mode Admin':'Mode Petugas'}</span>
+   </div>
+   <div className="rw-panel-body">
+    <table className="rw-table kl-table">
+     <thead><tr><th>No.</th><th>Pengaduan</th><th>Kategori</th><th>Prioritas</th><th>Lokasi</th><th>Pelapor</th><th>Tanggal</th><th>Petugas</th><th>Status</th><th style={{textAlign:'right'}}>Aksi</th></tr></thead>
+     <tbody>
+      {v.map((r,i)=><tr key={r.id}>
+       <td className="rw-cell-no">{String(i+1).padStart(2,'0')}</td>
+       <td><b className="rw-title">{r.judul}</b><span className="rw-code">{r.kode}</span></td>
+       <td><span className="rw-chip">{r.kategori}</span></td>
+       <td><span className={'kl-urg '+slug(r.urgensi)}>{r.urgensi}</span></td>
+       <td><span className="rw-loc" title={r.lokasi}>{r.lokasi}</span></td>
+       <td className="rw-cell-sub">{r.pelapor}</td>
+       <td className="rw-cell-date">{tgl(r.created_at)}</td>
+       <td>{isAdmin?<select className="in kl-select" value={r.petugas_id||''} disabled={busy===r.id} onChange={e=>assign(r,e.target.value)}><option value="">Belum ditugaskan</option>{r.petugas_id&&!petugas.some(p=>p.id===r.petugas_id)&&<option value={r.petugas_id}>{r.petugas_nama||'Petugas #'+r.petugas_id}</option>}{petugas.map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}</select>:<span className="rw-cell-sub">{r.petugas_nama||'Belum ditugaskan'}</span>}</td>
+       <td><select className="in kl-select" value={r.status} disabled={busy===r.id||(!isAdmin&&!mine(r))} title={!isAdmin&&!mine(r)?'Pengaduan ini ditangani petugas lain':''} onChange={e=>change(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select></td>
+       <td style={{textAlign:'right',whiteSpace:'nowrap'}}><Link className="rw-action" to={'/app/tracking/'+r.kode}>👁 Detail</Link>{isAdmin&&<button type="button" className="kl-del" title="Hapus pengaduan" onClick={()=>del(r)} disabled={busy===r.id}>🗑</button>}</td>
+      </tr>)}
+      {!v.length&&<tr><td colSpan="10"><div className="rw-empty"><div className="rw-empty-ic">📭</div><p>Tidak ada pengaduan yang cocok dengan filter ini.</p></div></td></tr>}
+     </tbody>
+    </table>
+   </div>
+  </section>
+  <div className="ad-note"><span>ℹ</span><p>{isAdmin?'Perubahan status dan penugasan otomatis mengirim notifikasi kepada pelapor dan petugas. Penghapusan pengaduan hanya dapat dilakukan admin.':'Pengaduan tanpa petugas akan otomatis menjadi milik Anda saat statusnya Anda ubah.'}</p></div>
+ </div>}
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
 const pwScore=pw=>{if(!pw)return 0;let s=0;if(pw.length>=6)s++;if(pw.length>=10)s++;if(/[a-z]/.test(pw)&&/[A-Z]/.test(pw))s++;if(/[0-9]/.test(pw)&&/[^A-Za-z0-9]/.test(pw))s++;return Math.min(4,s)};
 const pwLabel=['','Lemah','Cukup kuat','Kuat','Sangat kuat'];
@@ -766,6 +827,403 @@ const Profil=()=>{
   </div>
   {preview&&<div className="pf-preview" onClick={()=>setPreview(null)}><img src={preview} alt="Foto profil" onClick={e=>e.stopPropagation()}/><button type="button" className="pf-preview-close" onClick={()=>setPreview(null)}>✕</button></div>}
  </div>};
+function Peta(){
+ const [rows,setRows]=useState([]),[tab,setTab]=useState('Semua'),[sel,setSel]=useState(null),[err,setErr]=useState('');
+ useEffect(()=>{api('/complaints').then(setRows).catch(e=>setErr(e.message))},[]);
+ useEffect(()=>{setSel(null)},[tab]);
+ const G={Semua:()=>true,'Belum Ditugaskan':r=>!r.petugas_id,'Diproses':r=>['Diterima','Diverifikasi','Diprioritaskan'].includes(r.status),'Ditugaskan':r=>r.status==='Ditugaskan','Dalam Perbaikan':r=>r.status==='Dalam Perbaikan','Selesai':r=>r.status==='Selesai','Ditolak':r=>r.status==='Ditolak'};
+ const v=rows.filter(G[tab]),geo=v.filter(r=>r.lat&&r.lng),tanpa=v.length-geo.length;
+ const pin=s=>L.divIcon({className:'pt-pin '+slug(s),html:'<span></span>',iconSize:[20,20],iconAnchor:[10,10],popupAnchor:[0,-12]});
+ const colors={Diterima:'#7c3aed',Diverifikasi:'#7c3aed',Diprioritaskan:'#0ea5e9',Ditugaskan:'#2563eb','Dalam Perbaikan':'#f59e0b',Selesai:'#22c55e',Ditolak:'#ef4444'};
+ return<div className="ad-page">
+  <header className="rw-hero">
+   <span className="rw-eyebrow">🗺 Peta Pengaduan</span>
+   <h2>Sebaran Pengaduan Infrastruktur</h2>
+   <p>Lihat titik lokasi seluruh pengaduan, pantau konsentrasi kerusakan, dan buka detail laporan langsung dari peta.</p>
+   <div className="rw-hero-stats">
+    <div className="rw-hero-stat"><span>Total</span><b>{rows.length}</b></div>
+    <div className="rw-hero-stat"><span>Memiliki Titik</span><b>{rows.filter(r=>r.lat&&r.lng).length}</b></div>
+    <div className="rw-hero-stat"><span>Ditampilkan</span><b>{geo.length}</b></div>
+    <div className="rw-hero-stat"><span>Belum Ditugaskan</span><b>{rows.filter(r=>!r.petugas_id).length}</b></div>
+   </div>
+  </header>
+
+  <section className="card ad-toolbar pt-toolbar">
+   <div className="rw-tabs">{Object.keys(G).map(t=><button key={t} type="button" className={'rw-tab'+(tab===t?' on':'')} onClick={()=>setTab(t)}><span>{t}</span><span className="rw-tab-count">{rows.filter(G[t]).length}</span></button>)}</div>
+   <div className="pt-legend">{Object.entries(colors).map(([s,c])=><span key={s} className="pt-legend-item"><i style={{background:c}}/>{s}</span>)}</div>
+  </section>
+
+  {err&&<div className="ad-alert bad"><span>⚠</span>{err}</div>}
+
+  <div className="pt-layout">
+   <section className="card pt-map-card">
+    <div className="pt-map">
+     <MapContainer center={[-7.0292,112.7461]} zoom={11} style={{height:'100%',width:'100%'}} scrollWheelZoom>
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/>
+      <FlyTo pos={sel&&sel.lat?[parseFloat(sel.lat),parseFloat(sel.lng)]:null}/>
+      {geo.map(r=><Marker key={r.id} position={[parseFloat(r.lat),parseFloat(r.lng)]} icon={pin(r.status)} eventHandlers={{click:()=>setSel(r)}}>
+       <Popup>
+        <div className="pt-popup">
+         <b>{r.judul}</b>
+         <span className="pt-popup-code">{r.kode} · {r.kategori}</span>
+         <span className="pt-popup-loc">📍 {r.lokasi}</span>
+         <span className="pt-popup-meta"><span className={'pt-st '+slug(r.status)}>{r.status}</span><span className={'kl-urg '+slug(r.urgensi)}>{r.urgensi}</span></span>
+         <span className="pt-popup-officer">Petugas: {r.petugas_nama||'Belum ditugaskan'}</span>
+         <Link className="pt-popup-link" to={'/app/tracking/'+r.kode}>Lihat detail pengaduan →</Link>
+        </div>
+       </Popup>
+      </Marker>)}
+     </MapContainer>
+    </div>
+   </section>
+
+   <aside className="card pt-side">
+    <div className="pt-side-head"><div><h3>Daftar Lokasi</h3><p>{geo.length} titik · {tab}</p></div></div>
+    <div className="pt-list">
+     {geo.map(r=><button type="button" key={r.id} className={'pt-item'+(sel&&sel.id===r.id?' on':'')} onClick={()=>setSel(r)}>
+      <span className="pt-item-ic" style={{background:colors[r.status]+'1a',color:colors[r.status]}}>📍</span>
+      <span className="pt-item-body"><b>{r.judul}</b><span>{r.kode} · {r.kategori}</span><span className="pt-item-loc">{r.lokasi}</span></span>
+      <span className={'pt-st '+slug(r.status)}>{r.status}</span>
+     </button>)}
+     {!geo.length&&<div className="rw-empty"><div className="rw-empty-ic">🗺</div><p>Belum ada pengaduan dengan koordinat pada filter ini.</p></div>}
+    </div>
+    {tanpa>0&&<div className="pt-foot">ℹ {tanpa} pengaduan pada filter ini belum memiliki titik koordinat.</div>}
+   </aside>
+  </div>
+ </div>}
+function DataMasyarakat(){
+ const [rows,setRows]=useState([]),[tab,setTab]=useState('masyarakat'),[q,setQ]=useState('');
+ const [modal,setModal]=useState(null),[form,setForm]=useState({}),[msg,setMsg]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);
+ const load=()=>api('/users').then(d=>{setRows(d);setErr('')}).catch(e=>setErr(e.message));
+ useEffect(()=>{load()},[]);
+ const req=q.trim().toLowerCase();
+ const list=rows.filter(r=>(tab==='semua'||r.role===tab)&&(!req||(r.nama+' '+r.email).toLowerCase().includes(req)));
+ const n=role=>rows.filter(r=>r.role===role).length;
+ const total=rows.length,aktif=rows.filter(r=>r.aktif).length,nonaktif=total-aktif;
+ const initials=x=>(x.nama||'U').split(' ').map(y=>y[0]).slice(0,2).join('').toUpperCase();
+ const openCreate=()=>{setErr('');setMsg('');setForm({nama:'',email:'',password:'',role:'petugas',aktif:true});setModal({mode:'create'})};
+ const openEdit=r=>{setErr('');setMsg('');setForm({nama:r.nama,email:r.email,role:r.role,aktif:r.aktif,password:'',confirm:''});setModal({mode:'edit',id:r.id,nama:r.nama})};
+ const openReset=r=>{setErr('');setMsg('');setForm({password:'',confirm:''});setModal({mode:'reset',id:r.id,nama:r.nama})};
+ const close=()=>{setModal(null);setErr('')};
+ const save=async e=>{e.preventDefault();setErr('');setBusy(true);try{
+  if(modal.mode==='create'){
+   if(!form.nama||!form.email||(form.password||'').length<6)throw new Error('Nama, email, dan password minimal 6 karakter wajib diisi');
+   await api('/users',{method:'POST',body:{nama:form.nama,email:form.email,password:form.password,role:form.role}});
+   setMsg(`Akun ${form.nama} berhasil dibuat.`);
+  }else if(modal.mode==='edit'){
+   await api('/users/'+modal.id,{method:'PATCH',body:{nama:form.nama,email:form.email,role:form.role,aktif:form.aktif}});
+   setMsg(`Data ${form.nama} berhasil diperbarui.`);
+  }else{
+   if((form.password||'').length<6)throw new Error('Password baru minimal 6 karakter');
+   if(form.password!==form.confirm)throw new Error('Konfirmasi password tidak cocok');
+   await api('/users/'+modal.id+'/reset-password',{method:'POST',body:{newPassword:form.password}});
+   setMsg(`Password ${modal.nama} berhasil direset.`);
+  }
+  close();load();
+ }catch(x){setErr(x.message)}setBusy(false)};
+ const toggle=async r=>{const a=!r.aktif;if(!window.confirm(`${a?'Aktifkan':'Nonaktifkan'} akun ${r.nama}?`))return;setErr('');setMsg('');try{await api('/users/'+r.id,{method:'PATCH',body:{aktif:a}});setRows(x=>x.map(y=>y.id===r.id?{...y,aktif:a}:y));setMsg(`Akun ${r.nama} ${a?'diaktifkan':'dinonaktifkan'}.`)}catch(x){setErr(x.message)}};
+ const T=[['masyarakat','Masyarakat','👥'],['petugas','Petugas','🛠️'],['admin','Admin','🛡️'],['semua','Semua','📋']];
+ return<div className="ad-page">
+  <header className="rw-hero">
+   <span className="rw-eyebrow">👥 Data Masyarakat & Petugas</span>
+   <h2>Kelola Pengguna INFRA-CARE</h2>
+   <p>Tambah akun petugas, atur peran, aktifkan atau nonaktifkan akun, dan pantau aktivitas masyarakat serta beban tugas petugas.</p>
+   <div className="rw-hero-stats">
+    <div className="rw-hero-stat"><span>Total Pengguna</span><b>{total}</b></div>
+    <div className="rw-hero-stat"><span>Masyarakat</span><b>{n('masyarakat')}</b></div>
+    <div className="rw-hero-stat"><span>Petugas</span><b>{n('petugas')}</b></div>
+    <div className="rw-hero-stat"><span>Aktif</span><b>{aktif}</b></div>
+    <div className="rw-hero-stat"><span>Nonaktif</span><b>{nonaktif}</b></div>
+   </div>
+  </header>
+
+  <section className="card ad-toolbar">
+   <div className="rw-tabs">{T.map(([k,l,ic])=><button key={k} type="button" className={'rw-tab'+(tab===k?' on':'')} onClick={()=>setTab(k)}><span className="rw-tab-ic">{ic}</span><span>{l}</span><span className="rw-tab-count">{k==='semua'?total:n(k)}</span></button>)}</div>
+   <div className="ad-field ad-grow"><label>Cari Pengguna</label><input className="in" placeholder="Cari nama atau email..." value={q} onChange={e=>setQ(e.target.value)}/></div>
+   <div className="ad-actions"><button type="button" className="btn" onClick={openCreate}>➕ Tambah Pengguna</button></div>
+  </section>
+
+  {msg&&<div className="ad-alert ok"><span>✓</span>{msg}<button type="button" onClick={()=>setMsg('')}>✕</button></div>}
+  {err&&!modal&&<div className="ad-alert bad"><span>⚠</span>{err}<button type="button" onClick={()=>setErr('')}>✕</button></div>}
+
+  <section className="card rw-panel">
+   <div className="rw-panel-head">
+    <div><h3>Daftar Pengguna</h3><p>Menampilkan {list.length} dari {rows.length} pengguna</p></div>
+    <span className="rw-filter-badge">🔐 Hanya Admin</span>
+   </div>
+   <div className="rw-panel-body">
+    <table className="rw-table dm-table">
+     <thead><tr><th>Pengguna</th><th>Email</th><th>Peran</th><th>Aktivitas</th><th>Terdaftar</th><th>Status</th><th style={{textAlign:'right'}}>Aksi</th></tr></thead>
+     <tbody>
+      {list.map(r=><tr key={r.id}>
+       <td><div className="dm-user"><span className={'dm-av '+slug(r.role)}>{initials(r)}</span><div><b className="rw-title">{r.nama}</b><span className="rw-code">ID #{r.id}</span></div></div></td>
+       <td className="dm-email">{r.email}</td>
+       <td><span className={'dm-role '+slug(r.role)}>{ROLE[r.role]||r.role}</span></td>
+       <td>{r.role==='petugas'?<span className="dm-act"><b>{r.tugas_aktif}</b> tugas aktif · <b>{r.tugas_selesai||0}</b> selesai</span>:r.role==='masyarakat'?<span className="dm-act"><b>{r.total_laporan}</b> laporan · <b>{r.selesai_laporan}</b> selesai</span>:<span className="dm-act">Administrator sistem</span>}</td>
+       <td className="rw-cell-date">{tgl(r.created_at)}</td>
+       <td><span className={'dm-status '+(r.aktif?'on':'off')}><i/>{r.aktif?'Aktif':'Nonaktif'}</span></td>
+       <td style={{textAlign:'right',whiteSpace:'nowrap'}}>
+        <button type="button" className="dm-btn" onClick={()=>openEdit(r)}>✏ Kelola</button>
+        <button type="button" className="dm-btn" onClick={()=>openReset(r)}>🔑 Reset</button>
+        <button type="button" className={'dm-btn '+(r.aktif?'danger':'ok')} onClick={()=>toggle(r)}>{r.aktif?'⏸ Nonaktifkan':'▶ Aktifkan'}</button>
+       </td>
+      </tr>)}
+      {!list.length&&<tr><td colSpan="7"><div className="rw-empty"><div className="rw-empty-ic">👥</div><p>Tidak ada pengguna pada filter ini.</p></div></td></tr>}
+     </tbody>
+    </table>
+   </div>
+  </section>
+  <div className="ad-note"><span>ℹ</span><p>Akun nonaktif tidak dapat login, tetapi seluruh data pengaduan dan riwayatnya tetap tersimpan. Gunakan <b>Reset</b> untuk memberikan password baru kepada pengguna.</p></div>
+
+  {modal&&<div className="dm-backdrop" onClick={close}>
+   <form className="dm-modal" onClick={e=>e.stopPropagation()} onSubmit={save}>
+    <div className="dm-modal-head"><div><h3>{modal.mode==='create'?'Tambah Pengguna Baru':modal.mode==='edit'?'Kelola Pengguna':'Reset Password'}</h3><p>{modal.mode==='create'?'Buat akun masyarakat, petugas, atau admin.':modal.mode==='edit'?`Perbarui data akun ${modal.nama}.`:`Buat password baru untuk ${modal.nama}.`}</p></div><button type="button" className="dm-close" onClick={close}>✕</button></div>
+    <div className="dm-modal-body">
+     {modal.mode!=='reset'&&<>
+      <div className="ad-field"><label>Nama Lengkap</label><input className="in" value={form.nama||''} onChange={e=>setForm({...form,nama:e.target.value})} placeholder="Nama lengkap pengguna" required/></div>
+      <div className="ad-field"><label>Alamat Email</label><input className="in" type="email" value={form.email||''} onChange={e=>setForm({...form,email:e.target.value})} placeholder="email@contoh.com" required/></div>
+      <div className="ad-field"><label>Peran</label><select className="in" value={form.role} onChange={e=>setForm({...form,role:e.target.value})}><option value="masyarakat">Masyarakat</option><option value="petugas">Petugas Lapangan</option><option value="admin">Admin Pemerintah</option></select><span className="pf-hint">Petugas dapat menangani pengaduan; admin dapat mengelola pengguna dan pengaturan sistem.</span></div>
+     </>}
+     {modal.mode==='create'&&<div className="ad-field"><label>Password Awal</label><input className="in" type="password" value={form.password||''} onChange={e=>setForm({...form,password:e.target.value})} placeholder="Minimal 6 karakter" autoComplete="new-password" required/><span className="pf-hint">Sampaikan password ini kepada pengguna, lalu minta mereka menggantinya.</span></div>}
+     {modal.mode==='reset'&&<>
+      <div className="ad-field"><label>Password Baru</label><input className="in" type="password" value={form.password||''} onChange={e=>setForm({...form,password:e.target.value})} placeholder="Minimal 6 karakter" autoComplete="new-password" required/></div>
+      <div className="ad-field"><label>Konfirmasi Password</label><input className="in" type="password" value={form.confirm||''} onChange={e=>setForm({...form,confirm:e.target.value})} placeholder="Ulangi password baru" autoComplete="new-password" required/></div>
+     </>}
+     {modal.mode==='edit'&&<label className="dm-check"><input type="checkbox" checked={!!form.aktif} onChange={e=>setForm({...form,aktif:e.target.checked})}/><span><b>Akun aktif</b><small>Nonaktifkan untuk mencegah pengguna login tanpa menghapus datanya.</small></span></label>}
+     {err&&<div className="ad-alert bad"><span>⚠</span>{err}</div>}
+    </div>
+    <div className="dm-modal-foot"><button type="button" className="btn s" onClick={close}>Batal</button><button className="btn" disabled={busy}>{busy?'Menyimpan...':modal.mode==='reset'?'Reset Password':'Simpan'}</button></div>
+   </form>
+  </div>}
+ </div>}
+function Laporan(){
+ const [period,setPeriod]=useState('30'),[from,setFrom]=useState(''),[to,setTo]=useState('');
+ const [d,setD]=useState(null),[err,setErr]=useState(''),[msg,setMsg]=useState(''),[busy,setBusy]=useState(false);
+ const fmtDate=x=>{const z=new Date(x.getTime()-x.getTimezoneOffset()*60000);return z.toISOString().slice(0,10)};
+ const range=()=>{
+  if(period==='all')return{};
+  if(period==='custom'){const o={};if(from)o.from=from;if(to)o.to=to;return o}
+  const end=new Date(),start=new Date();start.setDate(end.getDate()-(Number(period)-1));
+  return{from:fmtDate(start),to:fmtDate(end)};
+ };
+ const qs=()=>{const p=new URLSearchParams(range());return p.toString()};
+ const load=()=>{setErr('');api('/reports'+(qs()?'?'+qs():'')).then(setD).catch(e=>setErr(e.message))};
+ useEffect(()=>{load()},[period,from,to]);
+ const s=d?.summary||{},total=s.total||0,selesai=s.selesai||0,proses=(s.diproses||0)+(s.perbaikan||0),ditolak=s.ditolak||0;
+ const rate=total?Math.round(selesai/total*100):0;
+ const sla=d?.settings?.sla_hari||7;
+ const slaRate=selesai?Math.round((s.tepat_waktu||0)/selesai*100):0;
+ const colors={Diterima:'#7c3aed',Diverifikasi:'#7c3aed',Diprioritaskan:'#0ea5e9',Ditugaskan:'#2563eb','Dalam Perbaikan':'#f59e0b',Selesai:'#22c55e',Ditolak:'#ef4444'};
+ const urgColors={Tinggi:'#ef4444',Sedang:'#f59e0b',Rendah:'#22c55e'};
+ const maxMonth=Math.max(...(d?.byMonth||[]).map(x=>x.n),1);
+ const MN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+ const fmtMonth=v=>{const[y,m]=String(v).split('-');return `${MN[Number(m)-1]||m} ${String(y).slice(2)}`};
+ const exportCsv=async()=>{setBusy(true);setErr('');setMsg('');try{
+  const data=await api('/complaints'+(qs()?'?'+qs():''));
+  const head=['Kode','Judul','Kategori','Urgensi','Status','Pelapor','Petugas','Lokasi','Latitude','Longitude','Tanggal'];
+  const body=data.map(r=>[r.kode,r.judul,r.kategori,r.urgensi,r.status,r.pelapor,r.petugas_nama||'',r.lokasi,r.lat||'',r.lng||'',tgl(r.created_at)]);
+  const csv=[head,...body].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`laporan-infra-care-${fmtDate(new Date())}.csv`;
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(a.href);
+  setMsg(`Berhasil mengunduh ${data.length} baris laporan sebagai CSV.`);
+ }catch(x){setErr(x.message)}setBusy(false)};
+ return<div className="ad-page">
+  <header className="rw-hero">
+   <span className="rw-eyebrow">📊 Laporan & Statistik</span>
+   <h2>Laporan Kinerja Penanganan Pengaduan</h2>
+   <p>Analisis volume pengaduan, kecepatan penyelesaian, distribusi kategori, dan performa petugas lapangan dalam satu halaman.</p>
+   <div className="rw-hero-stats">
+    <div className="rw-hero-stat"><span>Total</span><b>{total}</b></div>
+    <div className="rw-hero-stat"><span>Selesai</span><b>{selesai}</b></div>
+    <div className="rw-hero-stat"><span>Dalam Proses</span><b>{proses}</b></div>
+    <div className="rw-hero-stat"><span>Ditolak</span><b>{ditolak}</b></div>
+    <div className="rw-hero-stat"><span>Rata-rata</span><b>{s.rata_hari||0} <small>hari</small></b></div>
+   </div>
+  </header>
+
+  <section className="card ad-toolbar">
+   <div className="lp-period">
+    {[['7','7 Hari'],['30','30 Hari'],['90','90 Hari'],['all','Semua'],['custom','Kustom']].map(([k,l])=><button key={k} type="button" className={'rw-tab'+(period===k?' on':'')} onClick={()=>setPeriod(k)}>{l}</button>)}
+   </div>
+   {period==='custom'&&<div className="lp-dates"><div className="ad-field"><label>Dari</label><input className="in" type="date" value={from} onChange={e=>setFrom(e.target.value)}/></div><div className="ad-field"><label>Sampai</label><input className="in" type="date" value={to} onChange={e=>setTo(e.target.value)}/></div></div>}
+   <div className="ad-actions"><button type="button" className="btn" onClick={exportCsv} disabled={busy}>{busy?'Menyiapkan...':'⬇ Ekspor CSV'}</button></div>
+  </section>
+
+  {msg&&<div className="ad-alert ok"><span>✓</span>{msg}<button type="button" onClick={()=>setMsg('')}>✕</button></div>}
+  {err&&<div className="ad-alert bad"><span>⚠</span>{err}</div>}
+  {!d&&!err&&<div className="card ad-loading">Memuat laporan...</div>}
+  {d&&<>
+   <div className="lp-kpis">
+    <div className="lp-kpi"><span>Total Pengaduan</span><b>{total}</b><small>Periode terpilih</small></div>
+    <div className="lp-kpi"><span>Selesai</span><b className="green">{selesai}</b><small>{rate}% dari total</small></div>
+    <div className="lp-kpi"><span>Dalam Proses</span><b className="amber">{proses}</b><small>Diterima s.d. perbaikan</small></div>
+    <div className="lp-kpi"><span>Ditolak</span><b className="red">{ditolak}</b><small>Tidak memenuhi syarat</small></div>
+    <div className="lp-kpi"><span>Rata-rata Penyelesaian</span><b>{s.rata_hari||0} <i>hari</i></b><small>Dari laporan selesai</small></div>
+    <div className="lp-kpi"><span>Tingkat Penyelesaian</span><b className="blue">{rate}%</b><div className="lp-bar"><i style={{width:rate+'%'}}/></div></div>
+   </div>
+
+   <div className="lp-grid2">
+    <section className="card lp-panel">
+     <div className="lp-panel-head"><div><h3>Distribusi Status</h3><p>Posisi seluruh pengaduan pada periode ini</p></div><span className="rw-filter-badge">{total} total</span></div>
+     <div className="lp-rows">{(d.byStatus||[]).map(x=>{const pct=total?Math.round(x.n/total*100):0;return<div className="lp-row" key={x.status}><div className="lp-row-top"><span className="lp-label"><i style={{background:colors[x.status]||'#94a3b8'}}/>{x.status}</span><span className="lp-val">{x.n}<small>{pct}%</small></span></div><div className="lp-bar"><i style={{width:pct+'%',background:colors[x.status]||'#94a3b8'}}/></div></div>})}{!d.byStatus?.length&&<p className="lp-empty">Belum ada data pada periode ini.</p>}</div>
+    </section>
+    <section className="card lp-panel">
+     <div className="lp-panel-head"><div><h3>Berdasarkan Urgensi</h3><p>Prioritas laporan yang masuk</p></div></div>
+     <div className="lp-rows">{(d.byUrgensi||[]).map(x=>{const pct=total?Math.round(x.n/total*100):0;return<div className="lp-row" key={x.urgensi}><div className="lp-row-top"><span className="lp-label"><i style={{background:urgColors[x.urgensi]||'#94a3b8'}}/>{x.urgensi}</span><span className="lp-val">{x.n}<small>{pct}%</small></span></div><div className="lp-bar"><i style={{width:pct+'%',background:urgColors[x.urgensi]||'#94a3b8'}}/></div></div>})}{!d.byUrgensi?.length&&<p className="lp-empty">Belum ada data pada periode ini.</p>}</div>
+    </section>
+   </div>
+
+   <div className="lp-grid2">
+    <section className="card lp-panel">
+     <div className="lp-panel-head"><div><h3>Kategori Infrastruktur</h3><p>Jenis kerusakan yang paling sering dilaporkan</p></div></div>
+     <div className="lp-cats">{(d.byKategori||[]).map(x=>{const pct=total?Math.round(x.n/total*100):0;return<div className="lp-cat" key={x.kategori}><span>{x.kategori}</span><div className="lp-bar"><i style={{width:pct+'%'}}/></div><b>{x.n}</b><small>{pct}%</small></div>})}{!d.byKategori?.length&&<p className="lp-empty">Belum ada data pada periode ini.</p>}</div>
+    </section>
+    <section className="card lp-panel">
+     <div className="lp-panel-head"><div><h3>Tren 6 Bulan</h3><p>Jumlah pengaduan masuk per bulan</p></div></div>
+     <div className="lp-trend">{(d.byMonth||[]).map(x=><div className="lp-trend-col" key={x.label}><span className="lp-trend-val">{x.n}</span><div className="lp-trend-bar" style={{height:Math.max(4,x.n/maxMonth*100)+'%'}}/><small>{fmtMonth(x.label)}</small></div>)}</div>
+    </section>
+   </div>
+
+   <div className="lp-grid2 lp-grid-wide">
+    <section className="card lp-panel">
+     <div className="lp-panel-head"><div><h3>Ketepatan SLA</h3><p>Target penyelesaian {sla} hari</p></div></div>
+     <div className="lp-sla"><div className="lp-sla-ring" style={{'--pct':slaRate*3.6+'deg'}}><span><b>{slaRate}%</b><small>tepat waktu</small></span></div><div className="lp-sla-info"><div><b>{s.tepat_waktu||0}</b><span>Selesai dalam {sla} hari</span></div><div><b>{Math.max(0,selesai-(s.tepat_waktu||0))}</b><span>Melebihi target</span></div><p>Ubah target SLA di menu Pengaturan untuk menyesuaikan perhitungan ini.</p></div></div>
+    </section>
+    <section className="card rw-panel lp-table-panel">
+     <div className="rw-panel-head"><div><h3>Performa Petugas</h3><p>Beban tugas dan penyelesaian per petugas</p></div><span className="rw-filter-badge">{d.petugas?.length||0} petugas</span></div>
+     <div className="rw-panel-body"><table className="rw-table lp-table"><thead><tr><th>Petugas</th><th>Ditugaskan</th><th>Aktif</th><th>Selesai</th><th>Rata-rata</th></tr></thead><tbody>
+      {(d.petugas||[]).map(p=><tr key={p.id}><td><b className="rw-title">{p.nama}</b><span className="rw-code">ID #{p.id}</span></td><td>{p.ditugaskan}</td><td><span className="lp-pill amber">{p.aktif}</span></td><td><span className="lp-pill green">{p.selesai}</span></td><td>{p.rata_hari} hari</td></tr>)}
+      {!d.petugas?.length&&<tr><td colSpan="5"><div className="rw-empty"><div className="rw-empty-ic">🛠️</div><p>Belum ada akun petugas. Tambahkan melalui menu Data Masyarakat.</p></div></td></tr>}
+     </tbody></table></div>
+    </section>
+   </div>
+  </>}
+ </div>}
+function Pengaturan(){
+ const [u,setU]=useState(getUser()||{});
+ const isAdmin=u.role==='admin';
+ const [tab,setTab]=useState('akun');
+ const [f,setF]=useState({nama:u.nama||'',email:u.email||'',foto:u.foto||''});
+ const [p,setP]=useState({oldPassword:'',newPassword:'',confirm:''});
+ const [show,setShow]=useState({old:false,new:false,confirm:false});
+ const [sys,setSys]=useState({instansi_nama:'INFRA-CARE',instansi_kontak:'Dinas Pekerjaan Umum',sla_hari:'7',auto_assign:false});
+ const [msg,setMsg]=useState(''),[err,setErr]=useState(''),[busy,setBusy]=useState(false);
+ useEffect(()=>{api('/auth/me').then(d=>{setU(d);setF({nama:d.nama||'',email:d.email||'',foto:d.foto||''});localStorage.setItem('user',JSON.stringify(d))}).catch(()=>{})},[]);
+ useEffect(()=>{api('/settings').then(s=>setSys({instansi_nama:s.instansi_nama||'',instansi_kontak:s.instansi_kontak||'',sla_hari:String(s.sla_hari||'7'),auto_assign:s.auto_assign==='true'})).catch(()=>{})},[]);
+ const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
+ const uploadFoto=async e=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressImage(file);setF({...f,foto:data});setMsg('Foto dipilih. Klik Simpan Perubahan untuk menyimpan.');setErr('')}catch(x){setErr(x.message)}};
+ const saveAkun=async e=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);setF({nama:nu.nama||'',email:nu.email||'',foto:nu.foto||''});localStorage.setItem('user',JSON.stringify(nu));window.dispatchEvent(new Event('user:refresh'));setMsg('Informasi akun berhasil diperbarui.')}catch(x){setErr(x.message)}setBusy(false)};
+ const savePass=async e=>{e.preventDefault();setMsg('');setErr('');
+  if(!p.oldPassword)return setErr('Password saat ini wajib diisi');
+  if((p.newPassword||'').length<6)return setErr('Password baru minimal 6 karakter');
+  if(p.newPassword!==p.confirm)return setErr('Konfirmasi password baru tidak cocok');
+  setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.')}catch(x){setErr(x.message)}setBusy(false)};
+ const saveSys=async e=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const s=await api('/settings',{method:'PUT',body:sys});setSys({instansi_nama:s.instansi_nama||'',instansi_kontak:s.instansi_kontak||'',sla_hari:String(s.sla_hari||'7'),auto_assign:s.auto_assign==='true'});setMsg('Pengaturan layanan berhasil disimpan.')}catch(x){setErr(x.message)}setBusy(false)};
+ const switchTab=t=>{setTab(t);setMsg('');setErr('')};
+ const score=pwScore(p.newPassword),matchOk=p.confirm&&p.newPassword===p.confirm;
+ const ready=!!(p.oldPassword&&p.newPassword.length>=6&&matchOk);
+ const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+ const fotoSrc=f.foto||u.foto;
+ const dirty=f.nama!==(u.nama||'')||f.email!==(u.email||'')||f.foto!==(u.foto||'');
+ const T=[['akun','👤 Informasi Akun'],['keamanan','🔒 Keamanan'],...(isAdmin?[['sistem','⚙️ Pengaturan Sistem']]:[])];
+ return<div className="st-page">
+  <header className="rw-hero">
+   <span className="rw-eyebrow">⚙️ Pengaturan</span>
+   <h2>Pengaturan Akun & Layanan</h2>
+   <p>{isAdmin?'Kelola identitas akun, keamanan, serta kebijakan layanan yang berlaku untuk masyarakat dan petugas.':'Kelola identitas akun dan keamanan Anda. Kebijakan layanan ditetapkan oleh admin.'}</p>
+   <div className="rw-hero-stats">
+    <div className="rw-hero-stat"><span>Peran</span><b style={{fontSize:14}}>{ROLE[u.role]||'Pengguna'}</b></div>
+    <div className="rw-hero-stat"><span>Status</span><b style={{fontSize:14}}>{u.aktif===false?'Nonaktif':'Aktif'}</b></div>
+    <div className="rw-hero-stat"><span>Target SLA</span><b>{sys.sla_hari} <small>hari</small></b></div>
+    <div className="rw-hero-stat"><span>Auto-Assign</span><b style={{fontSize:14}}>{sys.auto_assign?'Aktif':'Nonaktif'}</b></div>
+   </div>
+  </header>
+
+  <div className="pf-layout">
+   <div className="pf-col">
+    <div className="pf-card">
+     <div className="pf-tabs" role="tablist">{T.map(([k,l])=><button type="button" key={k} className={tab===k?'on':''} onClick={()=>switchTab(k)}>{l}</button>)}</div>
+
+     {tab==='akun'&&<form className="pf-form" onSubmit={saveAkun}>
+      <div className="pf-form-head"><h4>Informasi Akun</h4><p>Data ini digunakan pada laporan, penugasan, dan notifikasi.</p></div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Nama Lengkap</label><input className="in" value={f.nama} onChange={e=>setF({...f,nama:e.target.value})} placeholder="Masukkan nama lengkap"/></div>
+       <div className="pf-field"><label>Alamat Email</label><input className="in" type="email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} placeholder="Masukkan email"/><span className="pf-hint">Email dipakai untuk login.</span></div>
+      </div>
+      <div className="pf-field"><label>Foto Profil <span className="pf-opt">opsional</span></label>
+       <div className="pf-foto-row">
+        <div className="pf-foto-thumb">{fotoSrc?<img src={fotoSrc} alt="Pratinjau foto"/>:<span>👤</span>}</div>
+        <div className="pf-foto-input"><input className="in" value={f.foto} onChange={e=>setF({...f,foto:e.target.value})} placeholder="Tempel URL gambar profil"/><span className="pf-hint">Tempel tautan gambar atau unggah dari perangkat (otomatis dikompres).</span></div>
+        <label className="btn s pf-upload">📷 Unggah<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
+       </div>
+      </div>
+      {msg&&<div className="pf-alert ok">✓ {msg}</div>}
+      {err&&<div className="pf-alert bad">⚠ {err}</div>}
+      <div className="pf-actions"><button type="button" className="btn s" onClick={()=>{setF({nama:u.nama||'',email:u.email||'',foto:u.foto||''});setMsg('');setErr('')}} disabled={!dirty||busy}>Batal</button><button className="btn" disabled={busy||!dirty}>{busy?'Menyimpan...':'Simpan Perubahan'}</button></div>
+     </form>}
+
+     {tab==='keamanan'&&<form className="pf-form" onSubmit={savePass}>
+      <div className="pf-form-head"><h4>Keamanan Akun</h4><p>Gunakan password yang kuat dan unik untuk melindungi akun {ROLE[u.role]||'Anda'}.</p></div>
+      <div className="pf-field"><label>Password Saat Ini</label><div className="pf-pass"><input className="in" type={show.old?'text':'password'} value={p.oldPassword} onChange={e=>setP({...p,oldPassword:e.target.value})} placeholder="Masukkan password saat ini" autoComplete="current-password"/><button type="button" onClick={()=>setShow({...show,old:!show.old})}>{show.old?'🙈':'👁️'}</button></div></div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Password Baru</label><div className="pf-pass"><input className="in" type={show.new?'text':'password'} value={p.newPassword} onChange={e=>setP({...p,newPassword:e.target.value})} placeholder="Minimal 6 karakter" autoComplete="new-password"/><button type="button" onClick={()=>setShow({...show,new:!show.new})}>{show.new?'🙈':'👁️'}</button></div><div className="pf-meter">{[1,2,3,4].map(i=><i key={i} className={i<=score?'on s'+score:''}/>)}</div><span className={score>=3?'pf-hint ok':'pf-hint'}>{p.newPassword?('Kekuatan password: '+pwLabel[score]):'Gunakan campuran huruf besar, kecil, angka, dan simbol.'}</span></div>
+       <div className="pf-field"><label>Konfirmasi Password Baru</label><div className="pf-pass"><input className="in" type={show.confirm?'text':'password'} value={p.confirm} onChange={e=>setP({...p,confirm:e.target.value})} placeholder="Ulangi password baru" autoComplete="new-password"/><button type="button" onClick={()=>setShow({...show,confirm:!show.confirm})}>{show.confirm?'🙈':'👁️'}</button></div><span className={p.confirm?(matchOk?'pf-hint ok':'pf-hint bad'):'pf-hint'}>{p.confirm?(matchOk?'✓ Password cocok':'✕ Password belum sama'):'Ulangi password baru untuk konfirmasi.'}</span></div>
+      </div>
+      {msg&&<div className="pf-alert ok">✓ {msg}</div>}
+      {err&&<div className="pf-alert bad">⚠ {err}</div>}
+      <div className="pf-actions"><button type="button" className="btn s" onClick={()=>{setP({oldPassword:'',newPassword:'',confirm:''});setMsg('');setErr('')}} disabled={busy}>Batal</button><button className="btn" disabled={busy||!ready}>{busy?'Mengubah...':'Ubah Password'}</button></div>
+     </form>}
+
+     {tab==='sistem'&&isAdmin&&<form className="pf-form" onSubmit={saveSys}>
+      <div className="pf-form-head"><h4>Kebijakan Layanan</h4><p>Pengaturan ini berlaku untuk seluruh pengaduan dan petugas.</p></div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Nama Instansi</label><input className="in" value={sys.instansi_nama} onChange={e=>setSys({...sys,instansi_nama:e.target.value})} placeholder="Nama instansi"/><span className="pf-hint">Ditampilkan pada laporan dan komunikasi layanan.</span></div>
+       <div className="pf-field"><label>Kontak / Unit</label><input className="in" value={sys.instansi_kontak} onChange={e=>setSys({...sys,instansi_kontak:e.target.value})} placeholder="Contoh: Dinas Pekerjaan Umum"/></div>
+      </div>
+      <div className="pf-grid2">
+       <div className="pf-field"><label>Target SLA (hari)</label><input className="in" type="number" min="1" max="365" value={sys.sla_hari} onChange={e=>setSys({...sys,sla_hari:e.target.value})}/><span className="pf-hint">Dipakai untuk menghitung ketepatan penyelesaian di menu Laporan.</span></div>
+       <div className="pf-field"><label>Distribusi Otomatis</label><label className="st-switch"><input type="checkbox" checked={!!sys.auto_assign} onChange={e=>setSys({...sys,auto_assign:e.target.checked})}/><span/><b>{sys.auto_assign?'Aktif':'Nonaktif'}</b></label><span className="pf-hint">Jika aktif, pengaduan baru otomatis diberikan ke petugas aktif dengan beban tugas paling sedikit.</span></div>
+      </div>
+      {msg&&<div className="pf-alert ok">✓ {msg}</div>}
+      {err&&<div className="pf-alert bad">⚠ {err}</div>}
+      <div className="pf-actions"><button className="btn" disabled={busy}>{busy?'Menyimpan...':'Simpan Pengaturan'}</button></div>
+     </form>}
+    </div>
+   </div>
+
+   <aside className="pf-col">
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Identitas Akun</h3><span className="pf-side-tag">{u.aktif===false?'Nonaktif':'Aktif'}</span></div>
+     <div className="st-ident"><span className="st-avatar">{initials}</span><div><b>{u.nama||'Pengguna'}</b><span>{ROLE[u.role]||'Pengguna'} · ID #{u.id||'-'}</span></div></div>
+     <div className="pf-info">
+      <div className="pf-info-row"><span>Email</span><b>{u.email||'-'}</b></div>
+      <div className="pf-info-row"><span>Peran</span><b>{ROLE[u.role]||'Pengguna'}</b></div>
+      <div className="pf-info-row"><span>Status</span><b className={u.aktif===false?'':"pf-green"}>{u.aktif===false?'Nonaktif':'Aktif'}</b></div>
+     </div>
+    </div>
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Kebijakan Layanan</h3>{isAdmin&&<span className="pf-side-tag">Dapat diubah</span>}</div>
+     <div className="pf-info">
+      <div className="pf-info-row"><span>Instansi</span><b>{sys.instansi_nama||'-'}</b></div>
+      <div className="pf-info-row"><span>Unit / Kontak</span><b>{sys.instansi_kontak||'-'}</b></div>
+      <div className="pf-info-row"><span>Target SLA</span><b>{sys.sla_hari} hari</b></div>
+      <div className="pf-info-row"><span>Auto-assign</span><b>{sys.auto_assign?'Aktif':'Nonaktif'}</b></div>
+     </div>
+     {!isAdmin&&<p className="st-policy">Perubahan kebijakan dilakukan oleh admin melalui menu Pengaturan.</p>}
+    </div>
+    <div className="pf-card pf-sidecard">
+     <div className="pf-side-head"><h3>Tips</h3></div>
+     <ul className="pf-tips">
+      <li><span>🔑</span><p>Ganti password secara berkala dan jangan bagikan kredensial akun.</p></li>
+      <li><span>📧</span><p>Pastikan email aktif agar notifikasi dan komunikasi tidak terlewat.</p></li>
+      <li><span>⚙️</span><p>Sebagai admin, sesuaikan SLA dan auto-assign agar penanganan lebih cepat.</p></li>
+     </ul>
+    </div>
+   </aside>
+  </div>
+ </div>}
+
 const Home=()=>{
   const u=getUser();
   if(!u)return <Navigate to="/login"/>;
@@ -779,5 +1237,10 @@ export default function App(){return<Routes>
   <Route path="buat" element={<Guard roles={['masyarakat']}><Buat/></Guard>}/><Route path="sukses/:kode" element={<Sukses/>}/>
   <Route path="tracking" element={<Tracking/>}/><Route path="tracking/:kode" element={<Tracking/>}/>
   <Route path="riwayat" element={<Riwayat/>}/><Route path="notifikasi" element={<Notif/>}/>
-  <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/><Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
+  <Route path="kelola" element={<Guard roles={['admin','petugas']}><Kelola/></Guard>}/>
+  <Route path="peta" element={<Guard roles={['admin','petugas']}><Peta/></Guard>}/>
+  <Route path="data-masyarakat" element={<Guard roles={['admin']}><DataMasyarakat/></Guard>}/>
+  <Route path="laporan" element={<Guard roles={['admin','petugas']}><Laporan/></Guard>}/>
+  <Route path="pengaturan" element={<Guard roles={['admin','petugas']}><Pengaturan/></Guard>}/>
+  <Route path="profil" element={<Profil/>}/><Route path="*" element={<Soon/>}/></Route>
  <Route path="*" element={<Navigate to="/"/>}/></Routes>}
