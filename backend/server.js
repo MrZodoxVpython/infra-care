@@ -51,7 +51,8 @@ const q=(s,p)=>pool.query(s,p).then(r=>r.rows);
 const wrap=f=>(req,res)=>f(req,res).catch(e=>{console.error('WRAP ERROR:',e.stack||e.message);res.status(500).json({message:'Terjadi kesalahan server: '+e.message})});
 const auth=roles=>(req,res,next)=>{try{req.user=jwt.verify((req.headers.authorization||'').replace('Bearer ',''),SECRET)}catch{return res.status(401).json({message:'Belum login'})}
  if(roles&&!roles.includes(req.user.role))return res.status(403).json({message:'Tidak diizinkan'});next()};
-const sign=u=>{const user={id:u.id,nama:u.nama,email:u.email,role:u.role};return{token:jwt.sign(user,SECRET,{expiresIn:'7d'}),user}};
+const sign=u=>{const user={id:u.id,nama:u.nama,email:u.email,role:u.role,foto:u.foto||null};return{token:jwt.sign(user,SECRET,{expiresIn:'7d'}),user}};
+pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS foto TEXT").catch(()=>{});
 
 app.post('/api/auth/login',wrap(async(req,res)=>{const[u]=await q('select * from users where email=$1',[req.body.email]);
  if(!u||!bcrypt.compareSync(req.body.password||'',u.password))return res.status(400).json({message:'Email atau password salah'});res.json(sign(u))}));
@@ -59,6 +60,17 @@ app.post('/api/auth/register',wrap(async(req,res)=>{const{nama,email,password}=r
  if(!nama||!email||(password||'').length<6)return res.status(400).json({message:'Nama, email, dan password (min. 6 karakter) wajib diisi'});
  if((await q('select 1 from users where email=$1',[email])).length)return res.status(400).json({message:'Email sudah terdaftar'});
  const[u]=await q("insert into users(nama,email,password,role) values($1,$2,$3,'masyarakat') returning *",[nama,email,bcrypt.hashSync(password,10)]);res.status(201).json(sign(u))}));
+app.get('/api/auth/me',auth(),wrap(async(req,res)=>{const[u]=await q('select id,nama,email,role,foto from users where id=$1',[req.user.id]);res.json(u||req.user)}));
+app.put('/api/auth/me',auth(),wrap(async(req,res)=>{const{nama,email,foto}=req.body;
+ if(email){const e=await q('select 1 from users where email=$1 and id<>$2',[email,req.user.id]);if(e.length)return res.status(400).json({message:'Email sudah digunakan'})}
+ const[u]=await q('update users set nama=coalesce($1,nama), email=coalesce($2,email), foto=coalesce($3,foto) where id=$4 returning id,nama,email,role,foto',[nama||null,email||null,foto||null,req.user.id]);
+ res.json(u)}));
+app.put('/api/auth/password',auth(),wrap(async(req,res)=>{const{oldPassword,newPassword}=req.body;
+ if(!oldPassword||!(newPassword||'').length<6)return res.status(400).json({message:'Password lama dan password baru (min. 6 karakter) wajib diisi'});
+ const[u]=await q('select password from users where id=$1',[req.user.id]);
+ if(!u||!bcrypt.compareSync(oldPassword,u.password))return res.status(400).json({message:'Password lama salah'});
+ await q('update users set password=$1 where id=$2',[bcrypt.hashSync(newPassword,10),req.user.id]);
+ res.json({ok:true})}));
 app.get('/api/public/stats',wrap(async(req,res)=>{const[r]=await q("select count(*)::int total,count(*) filter(where status='Selesai')::int selesai,count(*) filter(where status not in('Selesai','Ditolak'))::int proses from complaints");res.json(r)}));
 
 app.get('/api/stats',auth(),wrap(async(req,res)=>{const m=req.user.role==='masyarakat',w=m?'where user_id=$1':'',p=m?[req.user.id]:[];

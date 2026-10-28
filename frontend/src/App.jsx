@@ -369,7 +369,48 @@ function Kelola(){
   <Table rows={rows} admin onChange={change} dark={dark}/><p className="mu">Menampilkan {rows.length} data pengaduan</p></div></>}
 
 const Soon=()=><div className="card" style={{textAlign:'center',padding:60}}><h2>🚧 Halaman ini sedang disiapkan</h2><p className="mu">Fitur ini akan tersedia pada pembaruan berikutnya.</p></div>;
-const Profil=()=>{const u=getUser();return<div className="card"><h2>👤 Profil</h2><p><b>{u.nama}</b><br/>{u.email}<br/>{ROLE[u.role]}</p></div>};
+const Profil=()=>{
+ const nav=useNavigate();
+ const [u,setU]=useState(getUser()||{});
+ const [dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
+ const [tab,setTab]=useState('profil');
+ const [f,setF]=useState({nama:u.nama||'',email:u.email||'',foto:u.foto||''});
+ const [p,setP]=useState({oldPassword:'',newPassword:'',confirm:''});
+ const [msg,setMsg]=useState('');const [err,setErr]=useState('');const [busy,setBusy]=useState(false);
+ useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
+ useEffect(()=>{api('/auth/me').then(d=>{setU(d);setF({nama:d.nama||'',email:d.email||'',foto:d.foto||''});localStorage.setItem('user',JSON.stringify(d));}).catch(()=>{})},[]);
+ const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
+ const uploadFoto=async(e)=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressImage(file);setF({...f,foto:data});setMsg('Foto dipilih. Klik Simpan Perubahan untuk menyimpan.');setErr('');}catch(x){setErr(x.message);}};
+ const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);localStorage.setItem('user',JSON.stringify(nu));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
+ const savePass=async(e)=>{e.preventDefault();setMsg('');setErr('');if(p.newPassword!==p.confirm)return setErr('Konfirmasi password tidak cocok');if((p.newPassword||'').length<6)return setErr('Password baru minimal 6 karakter');setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
+ const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#edf3fb';
+ const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
+ return<div style={{maxWidth:1100,margin:'0 auto'}}><div className="banner"><h2>👤 Profil Saya</h2><p className="mu">Kelola informasi akun, foto profil, dan keamanan akun Anda.</p></div>
+  <div className="grid2" style={{alignItems:'start'}}><div className="stk"><div className="card" style={{padding:0,overflow:'hidden',background:cardBg}}>
+   <div style={{display:'flex',gap:24,alignItems:'center',padding:'28px 32px',background:dark?'linear-gradient(135deg,#1e293b,#0f172a)':'linear-gradient(135deg,#f8fbff,#eef5fd)'}}><div style={{position:'relative'}}>
+     {f.foto||u.foto?<img src={f.foto||u.foto} style={{width:110,height:110,borderRadius:'50%',objectFit:'cover',border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)'}}/>:
+     <div style={{width:110,height:110,borderRadius:'50%',display:'grid',placeItems:'center',background:'linear-gradient(135deg,var(--b),#1e40af)',color:'#fff',fontSize:38,fontWeight:800,border:'4px solid '+(dark?'#334155':'#fff'),boxShadow:'0 8px 24px rgba(30,90,180,0.15)'}}>{initials}</div>}
+     <label style={{position:'absolute',right:4,bottom:4,width:36,height:36,borderRadius:'50%',background:cardBg,border:'2px solid '+borderCol,display:'grid',placeItems:'center',cursor:'pointer',boxShadow:'0 4px 12px rgba(0,0,0,0.1)'}} title="Ubah foto profil">📷<input type="file" accept="image/png,image/jpeg" hidden onChange={uploadFoto}/></label>
+   </div>
+   <div style={{flex:1}}><h2 style={{color:cardText,marginBottom:6}}>{u.nama}</h2><p style={{color:cardSub,marginBottom:10}}>{u.email} • {ROLE[u.role]}</p><div style={{display:'flex',gap:10,flexWrap:'wrap'}}><span style={{padding:'4px 12px',borderRadius:20,background:dark?'#1e3a5f':'#e8f3ff',color:dark?'#60a5fa':'var(--b)',fontSize:12,fontWeight:600}}>{ROLE[u.role]}</span><span style={{padding:'4px 12px',borderRadius:20,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:12,fontWeight:600}}>Akun Aktif</span></div></div></div>
+   <div style={{display:'flex',gap:0,borderBottom:'1px solid '+borderCol}}><button onClick={()=>setTab('profil')} style={{flex:1,padding:'14px 20px',border:'none',background:'transparent',color:tab==='profil'?cardText:cardSub,fontWeight:600,cursor:'pointer',borderBottom:tab==='profil'?'2px solid var(--b)':'2px solid transparent',marginBottom:-1}}>Informasi Profil</button><button onClick={()=>setTab('keamanan')} style={{flex:1,padding:'14px 20px',border:'none',background:'transparent',color:tab==='keamanan'?cardText:cardSub,fontWeight:600,cursor:'pointer',borderBottom:tab==='keamanan'?'2px solid var(--b)':'2px solid transparent',marginBottom:-1}}>Keamanan</button></div>
+   {tab==='profil'&&<form onSubmit={saveProfil} style={{padding:'28px 32px',display:'flex',flexDirection:'column',gap:18}}>
+    <div className="row2"><div><label style={{color:cardText}}>Nama Lengkap</label><input className="in" value={f.nama} onChange={e=>setF({...f,nama:e.target.value})} placeholder="Masukkan nama lengkap"/></div><div><label style={{color:cardText}}>Email</label><input className="in" type="email" value={f.email} onChange={e=>setF({...f,email:e.target.value})} placeholder="Masukkan email"/></div></div>
+    <div><label style={{color:cardText}}>URL Foto Profil (Opsional)</label><input className="in" value={f.foto} onChange={e=>setF({...f,foto:e.target.value})} placeholder="Atau tempel URL gambar atau gunakan upload foto di atas"/></div>
+    {msg&&<div style={{padding:'10px 14px',borderRadius:10,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:13}}>✓ {msg}</div>}
+    {err&&<div className="err">{err}</div>}
+    <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}><button type="button" className="btn s" onClick={()=>setF({nama:u.nama||'',email:u.email||'',foto:u.foto||''})}>Batal</button><button className="btn" disabled={busy}>{busy?'Menyimpan...':'Simpan Perubahan'}</button></div>
+   </form>}
+   {tab==='keamanan'&&<form onSubmit={savePass} style={{padding:'28px 32px',display:'flex',flexDirection:'column',gap:18}}>
+    <div><label style={{color:cardText}}>Password Saat Ini</label><input className="in" type="password" value={p.oldPassword} onChange={e=>setP({...p,oldPassword:e.target.value})} placeholder="Masukkan password saat ini"/></div>
+    <div className="row2"><div><label style={{color:cardText}}>Password Baru</label><input className="in" type="password" value={p.newPassword} onChange={e=>setP({...p,newPassword:e.target.value})} placeholder="Minimal 6 karakter"/></div><div><label style={{color:cardText}}>Konfirmasi Password Baru</label><input className="in" type="password" value={p.confirm} onChange={e=>setP({...p,confirm:e.target.value})} placeholder="Ulangi password baru"/></div></div>
+    {msg&&<div style={{padding:'10px 14px',borderRadius:10,background:dark?'#14532d':'#f0fdf4',color:dark?'#4ade80':'#16a34a',fontSize:13}}>✓ {msg}</div>}
+    {err&&<div className="err">{err}</div>}
+    <div style={{display:'flex',gap:12,justifyContent:'flex-end'}}><button type="button" className="btn s" onClick={()=>{setP({oldPassword:'',newPassword:'',confirm:''});setMsg('');setErr('');}}>Batal</button><button className="btn" disabled={busy}>{busy?'Mengubah...':'Ubah Password'}</button></div>
+   </form>}
+  </div></div>
+  <div className="stk"><div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:16}}>Informasi Akun</h3><div style={{display:'flex',flexDirection:'column',gap:14}}><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Role</span><span style={{color:cardText,fontWeight:600}}>{ROLE[u.role]}</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">Status</span><span style={{color:'#22c55e',fontWeight:600}}>Aktif</span></div><div style={{display:'flex',justifyContent:'space-between'}}><span className="mu">User ID</span><span style={{color:cardSub,fontSize:13}}>#{u.id}</span></div></div></div>
+   <div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:12}}>Tips Keamanan</h3><ul style={{margin:0,paddingLeft:18,color:cardSub,fontSize:13,display:'flex',flexDirection:'column',gap:8}}><li>Gunakan password yang kuat dan unik</li><li>Jangan bagikan kredensial akun Anda</li><li>Perbarui informasi kontak secara berkala</li></ul></div></div></div></div>};
 const Home=()=>{
   const u=getUser();
   if(!u)return <Navigate to="/login"/>;
