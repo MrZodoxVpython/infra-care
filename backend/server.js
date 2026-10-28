@@ -66,7 +66,8 @@ app.put('/api/auth/me',auth(),wrap(async(req,res)=>{const{nama,email,foto}=req.b
  const[u]=await q('update users set nama=coalesce($1,nama), email=coalesce($2,email), foto=coalesce($3,foto) where id=$4 returning id,nama,email,role,foto',[nama||null,email||null,foto||null,req.user.id]);
  res.json(u)}));
 app.put('/api/auth/password',auth(),wrap(async(req,res)=>{const{oldPassword,newPassword}=req.body;
- if(!oldPassword||!(newPassword||'').length<6)return res.status(400).json({message:'Password lama dan password baru (min. 6 karakter) wajib diisi'});
+ if(!oldPassword||!newPassword)return res.status(400).json({message:'Password lama dan password baru wajib diisi'});
+ if((newPassword||'').length<6)return res.status(400).json({message:'Password baru minimal 6 karakter'});
  const[u]=await q('select password from users where id=$1',[req.user.id]);
  if(!u||!bcrypt.compareSync(oldPassword,u.password))return res.status(400).json({message:'Password lama salah'});
  await q('update users set password=$1 where id=$2',[bcrypt.hashSync(newPassword,10),req.user.id]);

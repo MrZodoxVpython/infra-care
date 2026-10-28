@@ -387,7 +387,13 @@ const Profil=()=>{
  const compressImage=(file,maxSide=512,quality=0.8)=>new Promise((res,rej)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{const s=Math.min(1,maxSide/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.round(img.width*s);c.height=Math.round(img.height*s);c.getContext('2d').drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);res(c.toDataURL('image/jpeg',quality))};img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('Gagal membaca foto'))};img.src=url});
  const uploadFoto=async(e)=>{const file=e.target.files?.[0];if(!file)return;try{const data=await compressImage(file);setF({...f,foto:data});setMsg('Foto dipilih. Klik Simpan Perubahan untuk menyimpan.');setErr('');}catch(x){setErr(x.message);}};
  const saveProfil=async(e)=>{e.preventDefault();setBusy(true);setMsg('');setErr('');try{const d=await api('/auth/me',{method:'PUT',body:f});const nu={...u,...d};setU(nu);localStorage.setItem('user',JSON.stringify(nu));window.dispatchEvent(new Event('user:refresh'));setMsg('Profil berhasil diperbarui.');}catch(x){setErr(x.message);}setBusy(false);};
- const savePass=async(e)=>{e.preventDefault();setMsg('');setErr('');if(p.newPassword!==p.confirm)return setErr('Konfirmasi password tidak cocok');if((p.newPassword||'').length<6)return setErr('Password baru minimal 6 karakter');setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
+ const savePass=async(e)=>{e.preventDefault();setMsg('');setErr('');
+   if(!p.oldPassword)return setErr('Password saat ini wajib diisi');
+   if(!p.newPassword)return setErr('Password baru wajib diisi');
+   if((p.newPassword||'').length<6)return setErr('Password baru minimal 6 karakter');
+   if(!p.confirm)return setErr('Konfirmasi password baru wajib diisi');
+   if(p.newPassword!==p.confirm)return setErr('Konfirmasi password baru tidak cocok');
+   setBusy(true);try{await api('/auth/password',{method:'PUT',body:{oldPassword:p.oldPassword,newPassword:p.newPassword}});setP({oldPassword:'',newPassword:'',confirm:''});setMsg('Password berhasil diubah.');}catch(x){setErr(x.message);}setBusy(false);};
  const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#edf3fb';
  const initials=(u.nama||'U').split(' ').map(x=>x[0]).slice(0,2).join('').toUpperCase();
  return<div style={{maxWidth:1100,margin:'0 auto'}}><div className="banner"><h2>👤 Profil Saya</h2><p className="mu">Kelola informasi akun, foto profil, dan keamanan akun Anda.</p></div>
