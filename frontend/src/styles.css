@@ -1902,3 +1902,10 @@ html.dark .st-policy{color:#94a3b8}
  .kl-table td[colspan]::before,.dm-table td[colspan]::before{display:none}
  html.dark .kl-table tbody tr:has(td[colspan]),html.dark .dm-table tbody tr:has(td[colspan]){background:transparent;border:0;box-shadow:none}
 }
+
+/* ---------- Pengaturan/Profil: tombol sekunder & unggah foto (dark) ---------- */
+html.dark .pf-card .btn.s,
+html.dark .pf-upload{background:#1e3a5f;border-color:#1e40af;color:#93c5fd}
+html.dark .pf-card .btn.s:hover,
+html.dark .pf-upload:hover{background:#1e40af;border-color:#2563eb;color:#fff}
+html.dark .pf-upload input:focus-visible+span{outline:none}
