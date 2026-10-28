@@ -547,21 +547,83 @@ function Riwayat(){
   </div>
  </div>}
 function Notif(){
- const[rows,setRows]=useState([]),[tab,setTab]=useState('Semua');const load=()=>api('/notifications').then(setRows);useEffect(()=>{load()},[]);
- const [dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
- useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
+ const[rows,setRows]=useState([]),[tab,setTab]=useState('Semua');
+ const load=()=>api('/notifications').then(setRows);
+ useEffect(()=>{load()},[]);
  const T=['Semua','Sistem','Pengaduan','Update'],v=rows.filter(r=>tab==='Semua'||r.tipe===tab),un=rows.filter(r=>!r.dibaca).length;
- const icon=(t,dib)=>{if(t==='Pengaduan')return dib?'📋':'📢';if(t==='Update')return dib?'🔄':'⚡';if(t==='Sistem')return dib?'ℹ️':'🛎️';return dib?'🔔':'🔔';};
- const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';const borderCol=dark?'#334155':'#f1f5f9';
- return<div className="grid2"><div className="stk"><div className="banner"><h2>🔔 Notifikasi</h2><p>Pantau informasi terbaru seputar pengaduan Anda.</p></div>
-  <div className="tabs">{T.map(t=><button key={t} className={tab===t?'on':''} onClick={()=>setTab(t)}>{t}{t==='Semua'&&un>0?` (${un})`:''}</button>)}</div>
-  <div className="card" style={{padding:0,overflow:'hidden',background:cardBg}}>
-   {v.map((r,i)=><div key={r.id} style={{display:'flex',gap:14,alignItems:'flex-start',padding:'16px 20px',borderBottom:i<v.length-1?('1px solid '+borderCol):'none',background:r.dibaca?cardBg:(dark?'rgba(59,130,246,0.12)':'#f8fbff'),cursor:'default',transition:'background 0.2s'}}><div style={{width:40,height:40,borderRadius:12,display:'grid',placeItems:'center',background:r.dibaca?(dark?'#334155':'#f1f5f9'):(dark?'rgba(59,130,246,0.25)':'#e8f3ff'),fontSize:18,flexShrink:0}}>{icon(r.tipe,r.dibaca)}</div>
-    <div style={{flex:1,minWidth:0}}><div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12}}><div><b style={{color:cardText,fontSize:14,display:'block',marginBottom:4}}>{r.judul}</b><p style={{color:cardSub,fontSize:13,lineHeight:1.5,margin:0,whiteSpace:'normal'}}>{r.isi}</p></div>{!r.dibaca&&<span style={{width:8,height:8,borderRadius:'50%',background:'#3b82f6',flexShrink:0,marginTop:6}} title="Belum dibaca"></span>}</div><div style={{display:'flex',alignItems:'center',gap:10,marginTop:10}}><span style={{fontSize:11,color:cardSub,opacity:0.9}}>{tgl(r.created_at)}</span><span style={{fontSize:11,padding:'2px 8px',borderRadius:10,background:dark?'#334155':'#f1f5f9',color:cardSub}}>{r.tipe}</span></div></div></div>)}
-   {!v.length&&<div style={{padding:40,textAlign:'center'}}><div style={{fontSize:40,marginBottom:12,opacity:0.5}}>🔕</div><p className="mu">Tidak ada notifikasi.</p></div>}
-   {v.length>0&&<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 20px',borderTop:'1px solid '+borderCol,background:dark?'#0f172a':'#f9fbfd'}}><span className="mu" style={{fontSize:12}}>Menampilkan {v.length} dari {rows.length} notifikasi</span><button className="btn s" onClick={()=>api('/notifications/read-all',{method:'POST'}).then(()=>{load();window.dispatchEvent(new Event('notif:refresh'));})}>✔ Tandai Semua Dibaca</button></div>}
-  </div></div>
-  <div className="card" style={{background:cardBg}}><h3 style={{color:cardText,marginBottom:16}}>Ringkasan Notifikasi</h3><div style={{display:'flex',flexDirection:'column',gap:12}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:12,borderRadius:12,background:dark?'#0f172a':'#f8fbff',border:'1px solid '+borderCol}}><div style={{display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:18}}>📬</span><span style={{color:cardText,fontSize:13}}>Belum Dibaca</span></div><b style={{color:'#3b82f6'}}>{un}</b></div>{T.slice(1).map(t=><div key={t} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:12,borderRadius:12,background:cardBg,border:'1px solid '+borderCol}}><div style={{display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:18}}>{t==='Pengaduan'?'📋':t==='Update'?'⚡':'🛎️'}</span><span style={{color:cardText,fontSize:13}}>{t}</span></div><b style={{color:cardText}}>{rows.filter(r=>r.tipe===t).length}</b></div>)}</div></div></div>}
+ const counts={};T.forEach(t=>counts[t]=t==='Semua'?rows.length:rows.filter(r=>r.tipe===t).length);
+ const pctRead=rows.length?Math.round((rows.length-un)/rows.length*100):0;
+ const icon=(t,dib)=>{if(t==='Pengaduan')return dib?'📋':'📢';if(t==='Update')return dib?'🔄':'⚡';if(t==='Sistem')return dib?'ℹ️':'🛎️';return '🔔'};
+ const markAll=()=>{if(!un)return;api('/notifications/read-all',{method:'POST'}).then(()=>{load();window.dispatchEvent(new Event('notif:refresh'));})};
+ return<div className="nt-page">
+  <section className="nt-hero">
+   <div className="nt-hero-main">
+    <span className="nt-eyebrow">🔔 Pusat Notifikasi</span>
+    <h2>Notifikasi Anda</h2>
+    <p>Semua informasi terbaru seputar pengaduan dan pembaruan sistem INFRA-CARE ada di sini.</p>
+    <div className="nt-hero-meta">
+     <span className="nt-chip">📥 {rows.length} total notifikasi</span>
+     <span className="nt-chip">● {un} belum dibaca</span>
+     <span className="nt-chip">✓ {rows.length-un} sudah dibaca</span>
+    </div>
+   </div>
+   <div className="nt-hero-progress">
+    <div className="nt-hero-progress-top"><span>Sudah dibaca</span><b>{pctRead}%</b></div>
+    <div className="nt-bar"><i style={{width:pctRead+'%'}}/></div>
+    <small>{rows.length-un} dari {rows.length} notifikasi</small>
+   </div>
+  </section>
+
+  <div className="nt-toolbar">
+   <div className="nt-tabs">{T.map(t=><button key={t} className={'nt-tab'+(tab===t?' on':'')} onClick={()=>setTab(t)}>{t}<span>{counts[t]}</span></button>)}</div>
+   <button className="btn s nt-readall" disabled={!un} onClick={markAll}>✔ Tandai Semua Dibaca</button>
+  </div>
+
+  <div className="nt-layout">
+   <div className="nt-card">
+    <div className="nt-card-head">
+     <div><h3>{tab==='Semua'?'Semua Notifikasi':`Notifikasi ${tab}`}</h3><p>{tab==='Semua'?'Informasi terbaru dari sistem dan pengaduan Anda.':`Menampilkan notifikasi bertipe ${tab.toLowerCase()}.`}</p></div>
+     <span className="nt-card-count">{v.length} item</span>
+    </div>
+    <div className="nt-list">
+     {v.map(r=><article key={r.id} className={'nt-item'+(r.dibaca?'':' unread')}>
+      <div className={'nt-ic '+slug(r.tipe)}>{icon(r.tipe,r.dibaca)}</div>
+      <div className="nt-body">
+       <div className="nt-body-top"><b>{r.judul}</b>{!r.dibaca&&<span className="nt-dot" title="Belum dibaca"/>}</div>
+       <p>{r.isi}</p>
+       <div className="nt-meta">
+        <span>🕘 {tgl(r.created_at)}</span>
+        <span className={'nt-type '+slug(r.tipe)}>{r.tipe}</span>
+        <span className={'nt-status '+(r.dibaca?'read':'new')}><i/>{r.dibaca?'Sudah dibaca':'Belum dibaca'}</span>
+       </div>
+      </div>
+     </article>)}
+     {!v.length&&<div className="nt-empty"><span>🔕</span><b>Belum ada notifikasi</b><p>Tidak ada notifikasi untuk kategori ini saat ini.</p></div>}
+    </div>
+    {v.length>0&&<div className="nt-foot"><span>Menampilkan {v.length} dari {rows.length} notifikasi</span><span>Diperbarui otomatis saat ada aktivitas baru</span></div>}
+   </div>
+
+   <aside className="nt-side">
+    <div className="nt-sidecard">
+     <div className="nt-side-head"><h3>Ringkasan Notifikasi</h3><span className="nt-side-tag">{un} baru</span></div>
+     <div className="nt-unread-box"><span>Belum Dibaca</span><b>{un}</b><small>dari {rows.length} notifikasi</small></div>
+     <div className="nt-break">{T.slice(1).map(t=><div key={t} className="nt-break-row"><div className="nt-break-top"><span>{t}</span><b>{counts[t]}</b></div><div className="nt-break-bar"><i className={slug(t)} style={{width:(rows.length?counts[t]/rows.length*100:0)+'%'}}/></div></div>)}</div>
+    </div>
+    <div className="nt-sidecard">
+     <div className="nt-side-head"><h3>Jenis Notifikasi</h3></div>
+     <ul className="nt-legend">
+      <li><span className="nt-ic pengaduan">📋</span><div><b>Pengaduan</b><p>Konfirmasi bahwa laporan Anda diterima sistem.</p></div></li>
+      <li><span className="nt-ic update">⚡</span><div><b>Update</b><p>Perubahan status penanganan pengaduan Anda.</p></div></li>
+      <li><span className="nt-ic sistem">🛎️</span><div><b>Sistem</b><p>Informasi dan pengumuman dari INFRA-CARE.</p></div></li>
+     </ul>
+    </div>
+    <div className="nt-sidecard nt-tip">
+     <div className="nt-side-head"><h3>Tips</h3></div>
+     <p>Tekan <b>Tandai Semua Dibaca</b> setelah meninjau notifikasi agar badge di sidebar kembali bersih.</p>
+    </div>
+   </aside>
+  </div>
+ </div>}
 
 function Kelola(){
  const u=getUser(),[rows,setRows]=useState([]),[f,setF]=useState({q:'',kategori:'',status:''}),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
