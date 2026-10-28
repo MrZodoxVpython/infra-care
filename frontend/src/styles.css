@@ -1110,7 +1110,7 @@ html.dark .pf-tips li p{color:#94a3b8}
 /* ============================================================
    BUAT PENGADUAN — formulir bertahap & ringkasan samping
    ============================================================ */
-.bp-page{max-width:1120px;margin:0 auto}
+.bp-page{width:100%;margin:0}
 .bp-hero{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;border-radius:20px;padding:24px 26px;background:linear-gradient(120deg,#eaf4ff 0%,#f6fbff 55%,#eef7ff 100%);border:1px solid #dcebfb;box-shadow:0 8px 24px rgba(30,90,180,.07);margin-bottom:18px}
 .bp-hero::before{content:'';position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(21,101,216,.16),rgba(21,101,216,0) 70%);z-index:-1}
 .bp-hero::after{content:'';position:absolute;right:24px;bottom:-60px;width:150px;height:150px;border-radius:50%;border:18px solid rgba(21,101,216,.06);z-index:-1}
@@ -1127,7 +1127,7 @@ html.dark .pf-tips li p{color:#94a3b8}
 .bp-bar{height:6px;border-radius:999px;background:#e6effb;overflow:hidden;margin-top:9px}
 .bp-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#1565d8,#38bdf8);transition:width .35s ease}
 
-.bp-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.bp-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
 .bp-card{background:#fff;border-radius:18px;border:1px solid #eaf1fa;box-shadow:0 6px 20px rgba(30,90,180,.06);overflow:hidden}
 .bp-back{display:inline-flex;align-items:center;gap:6px;margin:18px 24px 0;font-size:12px;font-weight:700;color:#2563eb}
 .bp-back:hover{color:#1d4ed8;text-decoration:underline}
