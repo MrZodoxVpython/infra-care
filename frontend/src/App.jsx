@@ -680,15 +680,15 @@ function Kelola(){
      <tbody>
       {v.map((r,i)=><tr key={r.id}>
        <td className="rw-cell-no">{String(i+1).padStart(2,'0')}</td>
-       <td><b className="rw-title">{r.judul}</b><span className="rw-code">{r.kode}</span></td>
-       <td><span className="rw-chip">{r.kategori}</span></td>
-       <td><span className={'kl-urg '+slug(r.urgensi)}>{r.urgensi}</span></td>
-       <td><span className="rw-loc" title={r.lokasi}>{r.lokasi}</span></td>
-       <td className="rw-cell-sub">{r.pelapor}</td>
-       <td className="rw-cell-date">{tgl(r.created_at)}</td>
-       <td>{isAdmin?<select className="in kl-select" value={r.petugas_id||''} disabled={busy===r.id} onChange={e=>assign(r,e.target.value)}><option value="">Belum ditugaskan</option>{r.petugas_id&&!petugas.some(p=>p.id===r.petugas_id)&&<option value={r.petugas_id}>{r.petugas_nama||'Petugas #'+r.petugas_id}</option>}{petugas.filter(p=>p.aktif!==false||p.id===r.petugas_id).map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}</select>:<span className="rw-cell-sub">{r.petugas_nama||'Belum ditugaskan'}</span>}</td>
-       <td><select className="in kl-select" value={r.status} disabled={busy===r.id||(!isAdmin&&!mine(r))} title={!isAdmin&&!mine(r)?'Pengaduan ini ditangani petugas lain':''} onChange={e=>change(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select></td>
-       <td style={{textAlign:'right',whiteSpace:'nowrap'}}><Link className="rw-action" to={'/app/tracking/'+r.kode}>👁 Detail</Link>{isAdmin&&<button type="button" className="kl-del" title="Hapus pengaduan" onClick={()=>del(r)} disabled={busy===r.id}>🗑</button>}</td>
+       <td data-label="Pengaduan"><b className="rw-title">{r.judul}</b><span className="rw-code">{r.kode}</span></td>
+       <td data-label="Kategori"><span className="rw-chip">{r.kategori}</span></td>
+       <td data-label="Prioritas"><span className={'kl-urg '+slug(r.urgensi)}>{r.urgensi}</span></td>
+       <td data-label="Lokasi"><span className="rw-loc" title={r.lokasi}>{r.lokasi}</span></td>
+       <td data-label="Pelapor" className="rw-cell-sub">{r.pelapor}</td>
+       <td data-label="Tanggal" className="rw-cell-date">{tgl(r.created_at)}</td>
+       <td data-label="Petugas">{isAdmin?<select className="in kl-select" value={r.petugas_id||''} disabled={busy===r.id} onChange={e=>assign(r,e.target.value)}><option value="">Belum ditugaskan</option>{r.petugas_id&&!petugas.some(p=>p.id===r.petugas_id)&&<option value={r.petugas_id}>{r.petugas_nama||'Petugas #'+r.petugas_id}</option>}{petugas.filter(p=>p.aktif!==false||p.id===r.petugas_id).map(p=><option key={p.id} value={p.id}>{p.nama}</option>)}</select>:<span className="rw-cell-sub">{r.petugas_nama||'Belum ditugaskan'}</span>}</td>
+       <td data-label="Status"><select className="in kl-select" value={r.status} disabled={busy===r.id||(!isAdmin&&!mine(r))} title={!isAdmin&&!mine(r)?'Pengaduan ini ditangani petugas lain':''} onChange={e=>change(r,e.target.value)}>{STATUS.map(s=><option key={s}>{s}</option>)}</select></td>
+       <td data-label="Aksi" style={{textAlign:'right',whiteSpace:'nowrap'}}><Link className="rw-action" to={'/app/tracking/'+r.kode}>👁 Detail</Link>{isAdmin&&<button type="button" className="kl-del" title="Hapus pengaduan" onClick={()=>del(r)} disabled={busy===r.id}>🗑</button>}</td>
       </tr>)}
       {!v.length&&<tr><td colSpan="10"><div className="rw-empty"><div className="rw-empty-ic">📭</div><p>Tidak ada pengaduan yang cocok dengan filter ini.</p></div></td></tr>}
      </tbody>
@@ -956,13 +956,13 @@ function DataMasyarakat(){
      <thead><tr><th>Pengguna</th><th>Email</th><th>Peran</th><th>Aktivitas</th><th>Terdaftar</th><th>Status</th><th style={{textAlign:'right'}}>Aksi</th></tr></thead>
      <tbody>
       {list.map(r=><tr key={r.id}>
-       <td><div className="dm-user"><span className={'dm-av '+slug(r.role)}>{initials(r)}</span><div><b className="rw-title">{r.nama}</b><span className="rw-code">ID #{r.id}</span></div></div></td>
-       <td className="dm-email">{r.email}</td>
-       <td><span className={'dm-role '+slug(r.role)}>{ROLE[r.role]||r.role}</span></td>
-       <td>{r.role==='petugas'?<span className="dm-act"><b>{r.tugas_aktif}</b> tugas aktif · <b>{r.tugas_selesai||0}</b> selesai</span>:r.role==='masyarakat'?<span className="dm-act"><b>{r.total_laporan}</b> laporan · <b>{r.selesai_laporan}</b> selesai</span>:<span className="dm-act">Administrator sistem</span>}</td>
-       <td className="rw-cell-date">{tgl(r.created_at)}</td>
-       <td><span className={'dm-status '+(r.aktif?'on':'off')}><i/>{r.aktif?'Aktif':'Nonaktif'}</span></td>
-       <td style={{textAlign:'right',whiteSpace:'nowrap'}}>
+       <td data-label="Pengguna"><div className="dm-user"><span className={'dm-av '+slug(r.role)}>{initials(r)}</span><div><b className="rw-title">{r.nama}</b><span className="rw-code">ID #{r.id}</span></div></div></td>
+       <td data-label="Email" className="dm-email">{r.email}</td>
+       <td data-label="Peran"><span className={'dm-role '+slug(r.role)}>{ROLE[r.role]||r.role}</span></td>
+       <td data-label="Aktivitas">{r.role==='petugas'?<span className="dm-act"><b>{r.tugas_aktif}</b> tugas aktif · <b>{r.tugas_selesai||0}</b> selesai</span>:r.role==='masyarakat'?<span className="dm-act"><b>{r.total_laporan}</b> laporan · <b>{r.selesai_laporan}</b> selesai</span>:<span className="dm-act">Administrator sistem</span>}</td>
+       <td data-label="Terdaftar" className="rw-cell-date">{tgl(r.created_at)}</td>
+       <td data-label="Status"><span className={'dm-status '+(r.aktif?'on':'off')}><i/>{r.aktif?'Aktif':'Nonaktif'}</span></td>
+       <td data-label="Aksi" style={{textAlign:'right',whiteSpace:'nowrap'}}>
         <button type="button" className="dm-btn" onClick={()=>openEdit(r)}>✏ Kelola</button>
         <button type="button" className="dm-btn" onClick={()=>openReset(r)}>🔑 Reset</button>
         <button type="button" className={'dm-btn '+(r.aktif?'danger':'ok')} onClick={()=>toggle(r)}>{r.aktif?'⏸ Nonaktifkan':'▶ Aktifkan'}</button>
