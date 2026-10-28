@@ -793,3 +793,161 @@ html.dark .rw-table .tag.ditolak,html.dark .rw-table .tag.tinggi{background:rgba
  .rw-panel-head{flex-direction:column;align-items:flex-start}
 }
 
+/* ============================================================
+   TRACKING PAGE — tampilan progres & detail yang profesional
+   ============================================================ */
+.tr-empty{padding:52px 24px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.tr-empty-ic{font-size:42px;opacity:.6}
+.tr-empty h2{font-size:20px;color:var(--tx)}
+.tr-empty p{margin:0 0 8px}
+
+.tr-hero{position:relative;isolation:isolate;overflow:hidden;border-radius:20px;padding:22px 26px;background:linear-gradient(120deg,#eaf4ff 0%,#f6fbff 55%,#eef7ff 100%);border:1px solid #dcebfb;box-shadow:0 8px 24px rgba(30,90,180,.07)}
+.tr-hero::before{content:'';position:absolute;right:-70px;top:-90px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 30% 30%,rgba(21,101,216,.16),rgba(21,101,216,0) 70%);z-index:-1}
+.tr-hero::after{content:'';position:absolute;right:24px;bottom:-60px;width:150px;height:150px;border-radius:50%;border:18px solid rgba(21,101,216,.06);z-index:-1}
+.tr-back{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;font-weight:700;color:#2563eb;text-decoration:none}
+.tr-back:hover{color:#1d4ed8;text-decoration:underline}
+.tr-eyebrow{display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--b)}
+.tr-hero h2{font-size:23px;line-height:1.25;color:var(--bd);margin:6px 0 6px}
+.tr-hero p{margin:0;max-width:560px;font-size:13.5px;line-height:1.6;color:var(--mu)}
+.tr-hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:16px}
+.tr-meta-item{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:rgba(255,255,255,.72);border:1px solid rgba(21,101,216,.12);font-size:11.5px;color:#6b7fa6}
+.tr-meta-item b{color:#14306b;font-weight:700}
+
+.tr-status{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:11.5px;font-weight:700;background:#eef4fc;color:#4b6a99;border:1px solid #e2ecf8}
+.tr-status i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.tr-status.diterima,.tr-status.diverifikasi{background:#efe9ff;color:#7a4fd6;border-color:#e6dcfb}
+.tr-status.diprioritaskan,.tr-status.ditugaskan,.tr-status.diproses{background:#e8f1ff;color:#1d4ed8;border-color:#d6e6ff}
+.tr-status.dalam-perbaikan,.tr-status.sedang{background:#fff4e2;color:#b45309;border-color:#fde8c4}
+.tr-status.selesai,.tr-status.rendah{background:#e6f8ee;color:#15803d;border-color:#cdf0dc}
+.tr-status.ditolak,.tr-status.tinggi{background:#fdeaea;color:#b91c1c;border-color:#fbd5d5}
+
+.tr-card{padding:20px}
+.tr-summary{display:flex;gap:18px;align-items:flex-start}
+.tr-photo{width:160px;height:118px;border-radius:14px;object-fit:cover;background:#eef5fd;border:1px solid #e8f0fa;flex-shrink:0}
+.tr-photo-ph{display:grid;place-items:center;font-size:38px;opacity:.7}
+.tr-summary-body{flex:1;min-width:0}
+.tr-kode{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8ea0bb}
+.tr-title{font-size:18px;line-height:1.35;font-weight:800;color:#14306b;margin:5px 0 10px}
+.tr-meta{display:flex;flex-wrap:wrap;gap:7px 16px;font-size:12.5px;color:#5a729a}
+.tr-badges{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px}
+
+.tr-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.tr-progress-head h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 3px}
+.tr-progress-head p{margin:0;font-size:12px;color:var(--mu)}
+.tr-progress-pct{font-size:20px;font-weight:800;line-height:1;color:var(--b);font-variant-numeric:tabular-nums}
+.tr-progress-bar{height:7px;border-radius:999px;background:#eaf2fc;overflow:hidden}
+.tr-progress-bar i{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#1565d8,#38bdf8);transition:width .4s ease}
+.tr-steps{display:flex;margin:22px 0 0;padding:0;list-style:none}
+.tr-step{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0}
+.tr-step::before{content:'';position:absolute;top:15px;right:50%;left:0;height:2px;background:#e2ecf8}
+.tr-step::after{content:'';position:absolute;top:15px;left:50%;right:0;height:2px;background:#e2ecf8}
+.tr-step:first-child::before,.tr-step:last-child::after{display:none}
+.tr-step.done::before,.tr-step.done::after,.tr-step.active::before{background:#1565d8}
+.tr-step-dot{position:relative;z-index:1;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#fff;border:2px solid #e2ecf8;color:#8ea0bb;font-size:12px;font-weight:800}
+.tr-step.done .tr-step-dot{background:#1565d8;border-color:#1565d8;color:#fff}
+.tr-step.active .tr-step-dot{border-color:#1565d8;color:#1565d8;box-shadow:0 0 0 4px rgba(21,101,216,.14)}
+.tr-step-text{display:flex;flex-direction:column;gap:2px;min-width:0;margin-top:8px;padding:0 4px}
+.tr-step-text b{font-size:11.5px;font-weight:700;line-height:1.3;color:#5a729a}
+.tr-step.done .tr-step-text b{color:#14306b}
+.tr-step.active .tr-step-text b{color:#1565d8}
+.tr-step-text small{font-size:10.5px;color:#94a3b8;font-variant-numeric:tabular-nums}
+
+.tr-alert{display:flex;gap:12px;padding:15px 17px;border-radius:16px;background:#fef2f2;border:1px solid #fbd5d5;color:#991b1b}
+.tr-alert-ic{font-size:20px;line-height:1.2}
+.tr-alert b{display:block;font-size:13.5px;margin-bottom:3px}
+.tr-alert p{margin:0;font-size:12.5px;line-height:1.6;color:#b91c1c}
+
+.tr-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.tr-card-head h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 3px}
+.tr-card-head p{margin:0;font-size:12px;color:var(--mu)}
+.tr-card-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#eef6ff;font-size:16px;flex-shrink:0}
+.tr-loc{margin:0 0 4px;font-size:13.5px;font-weight:700;color:#14306b}
+.tr-coord{margin:0 0 12px;font-size:12px;color:#7a8ca8}
+.tr-action{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:10px;background:#eef6ff;border:1px solid #dbeafe;color:#2563eb;font-size:12.5px;font-weight:700;text-decoration:none;transition:background .18s,border-color .18s,color .18s}
+.tr-action:hover{background:#e0efff;border-color:#bfdbfe;color:#1d4ed8}
+
+.tr-side{padding:20px}
+.tr-side h3{font-size:15px;font-weight:700;color:var(--tx);margin:0 0 12px}
+.tr-detail{display:flex;flex-direction:column}
+.tr-detail-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px dashed #eef3fa}
+.tr-detail-row:last-child{border-bottom:0}
+.tr-detail-row>span{font-size:12px;color:#7a8ca8;white-space:nowrap}
+.tr-detail-row>b{font-size:12.5px;font-weight:700;color:#14306b;text-align:right;word-break:break-word}
+.tr-desc{margin-top:14px;padding-top:14px;border-top:1px solid #eef3fa}
+.tr-desc>span{font-size:12px;color:#7a8ca8}
+.tr-desc p{margin:6px 0 0;font-size:12.5px;line-height:1.65;color:#4b6288}
+
+.tr-officer{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;background:#f7fbff;border:1px solid #eaf2fc}
+.tr-officer-av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#e8f1ff;font-size:20px;flex-shrink:0}
+.tr-officer b{display:block;font-size:13px;color:#14306b}
+.tr-officer span{font-size:11.5px;color:#7a8ca8}
+.tr-help{margin:0;font-size:12px;line-height:1.65;color:#5a729a}
+
+/* Tracking — mode gelap */
+html.dark .tr-hero{background:linear-gradient(120deg,#122036,#0f1a2b);border-color:#233449;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+html.dark .tr-hero::before{background:radial-gradient(circle at 30% 30%,rgba(59,130,246,.22),rgba(59,130,246,0) 70%)}
+html.dark .tr-hero::after{border-color:rgba(96,165,250,.08)}
+html.dark .tr-back{color:#60a5fa}
+html.dark .tr-eyebrow{color:#60a5fa}
+html.dark .tr-hero h2{color:#f1f5f9}
+html.dark .tr-hero p{color:#94a3b8}
+html.dark .tr-meta-item{background:rgba(15,23,42,.72);border-color:#243449;color:#94a3b8}
+html.dark .tr-meta-item b{color:#f1f5f9}
+html.dark .tr-status{background:#1e293b;border-color:#334155;color:#cbd5e1}
+html.dark .tr-status.diterima,html.dark .tr-status.diverifikasi{background:rgba(124,58,237,.18);border-color:rgba(124,58,237,.35);color:#c4b5fd}
+html.dark .tr-status.diprioritaskan,html.dark .tr-status.ditugaskan,html.dark .tr-status.diproses{background:rgba(59,130,246,.18);border-color:rgba(59,130,246,.35);color:#93c5fd}
+html.dark .tr-status.dalam-perbaikan,html.dark .tr-status.sedang{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.35);color:#fcd34d}
+html.dark .tr-status.selesai,html.dark .tr-status.rendah{background:rgba(34,197,94,.18);border-color:rgba(34,197,94,.35);color:#86efac}
+html.dark .tr-status.ditolak,html.dark .tr-status.tinggi{background:rgba(239,68,68,.18);border-color:rgba(239,68,68,.35);color:#fca5a5}
+html.dark .tr-photo{background:#0f172a;border-color:#334155}
+html.dark .tr-kode{color:#94a3b8}
+html.dark .tr-title{color:#f1f5f9}
+html.dark .tr-meta{color:#94a3b8}
+html.dark .tr-progress-head h3,html.dark .tr-side h3,html.dark .tr-card-head h3{color:#f1f5f9}
+html.dark .tr-progress-head p,html.dark .tr-card-head p{color:#94a3b8}
+html.dark .tr-progress-pct{color:#60a5fa}
+html.dark .tr-progress-bar{background:#334155}
+html.dark .tr-progress-bar i{background:linear-gradient(90deg,#2563eb,#38bdf8)}
+html.dark .tr-step::before,html.dark .tr-step::after{background:#334155}
+html.dark .tr-step.done::before,html.dark .tr-step.done::after,html.dark .tr-step.active::before{background:#3b82f6}
+html.dark .tr-step-dot{background:#0f172a;border-color:#334155;color:#94a3b8}
+html.dark .tr-step.done .tr-step-dot{background:#2563eb;border-color:#2563eb;color:#fff}
+html.dark .tr-step.active .tr-step-dot{border-color:#60a5fa;color:#93c5fd;box-shadow:0 0 0 4px rgba(59,130,246,.16)}
+html.dark .tr-step-text b{color:#94a3b8}
+html.dark .tr-step.done .tr-step-text b{color:#e2e8f0}
+html.dark .tr-step.active .tr-step-text b{color:#93c5fd}
+html.dark .tr-step-text small{color:#64748b}
+html.dark .tr-alert{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.35);color:#fca5a5}
+html.dark .tr-alert p{color:#fca5a5}
+html.dark .tr-card-ic{background:#1e3a5f}
+html.dark .tr-loc{color:#f1f5f9}
+html.dark .tr-coord{color:#94a3b8}
+html.dark .tr-action{background:#1e3a5f;border-color:#1e40af;color:#93c5fd}
+html.dark .tr-action:hover{background:#1e40af;border-color:#2563eb;color:#fff}
+html.dark .tr-detail-row{border-bottom-color:#2b3a4f}
+html.dark .tr-detail-row>span{color:#94a3b8}
+html.dark .tr-detail-row>b{color:#f1f5f9}
+html.dark .tr-desc{border-top-color:#2b3a4f}
+html.dark .tr-desc>span{color:#94a3b8}
+html.dark .tr-desc p{color:#cbd5e1}
+html.dark .tr-officer{background:#0f172a;border-color:#243449}
+html.dark .tr-officer-av{background:#1e3a5f}
+html.dark .tr-officer b{color:#f1f5f9}
+html.dark .tr-officer span{color:#94a3b8}
+html.dark .tr-help{color:#94a3b8}
+
+@media(max-width:900px){
+ .tr-summary{flex-direction:column}
+ .tr-photo{width:100%;height:180px}
+}
+@media(max-width:640px){
+ .tr-hero{padding:20px}
+ .tr-hero h2{font-size:20px}
+ .tr-steps{flex-direction:column;gap:14px;margin-top:18px}
+ .tr-step{flex-direction:row;align-items:flex-start;gap:10px;text-align:left}
+ .tr-step::before,.tr-step::after{display:none}
+ .tr-step-dot{flex-shrink:0}
+ .tr-step-text{margin-top:2px}
+}
+
+

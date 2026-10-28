@@ -328,16 +328,78 @@ function Tracking(){
  const{kode}=useParams(),nav=useNavigate(),[c,setC]=useState(null),[list,setList]=useState([]),[dark,setDark]=useState(()=>document.documentElement.classList.contains('dark'));
  useEffect(()=>{const ck=()=>setDark(document.documentElement.classList.contains('dark'));ck();const ob=new MutationObserver(ck);ob.observe(document.documentElement,{attributes:true,attributeFilter:['class']});return()=>ob.disconnect();},[]);
  useEffect(()=>{if(kode)api('/complaints/'+kode).then(setC);else api('/complaints').then(l=>{setList(l);if(l[0])nav('/app/tracking/'+l[0].kode,{replace:true})})},[kode]);
- if(!kode)return<div className="card"><h2>📍 Tracking Pengaduan</h2><p className="mu">{list.length?'Memuat...':'Anda belum memiliki pengaduan.'}</p></div>;if(!c)return<p>Memuat...</p>;
- const flow=['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai'],idx=flow.indexOf(c.status),when=s=>{const l=c.logs.find(x=>x.status===s);return l?tgl(l.created_at):'-'};
- const cardBg=dark?'#1e293b':'#fff';const cardText=dark?'#e2e8f0':'#14306b';const cardSub=dark?'#94a3b8':'#6b7fa6';
- return<div className="grid2"><div className="stk"><div className="card" style={{background:cardBg}}><Link to="/app/riwayat" style={{color:'var(--b)'}}>← Kembali</Link><h2 style={{color:cardText}}>📍 Tracking Pengaduan</h2><p style={{color:cardSub}}>Pantau perkembangan pengaduan infrastruktur Anda secara real-time.</p>
-  <div style={{display:'flex',gap:16,marginTop:14,alignItems:'center'}}>{c.foto&&<img src={c.foto} style={{borderRadius:12,maxWidth:'100%',height:'auto',objectFit:'contain',maxHeight:'350px',display:'block'}}/>}<div style={{flex:1}}><h3 style={{color:cardText}}>{c.judul}</h3><span className="tag" style={{background:dark?'#334155':'#f2f8ff',color:dark?'#e2e8f0':'#14306b',border:'1px solid '+(dark?'#334155':'#edf3fb')}}>{c.kategori}</span><p style={{color:cardSub}}>{c.lokasi}<br/>{tgl(c.created_at)} · {c.kode}</p></div><St s={c.status} dark={dark}/></div>
-  <div className="steps">{flow.map((s,i)=><div key={s} className={i<=idx?'ok':''} style={{background:dark?'#1e293b':'#fff'}}><span>{i<idx?'✓':i+1}</span><b style={{color:cardText}}>{s}</b><br/><span className="mu" style={{background:'none',color:cardSub,width:'auto',height:'auto',display:'block'}}>{when(s)}</span></div>)}</div>
-  {c.status==='Ditolak'&&<div className="err">Pengaduan ini ditolak.</div>}</div>
-  <div className="card" style={{background:cardBg}}><h3 style={{color:cardText}}>Peta Lokasi Pengaduan</h3><p style={{color:cardSub}}>📍 {c.lokasi}<br/>Koordinat: {c.lat&&c.lng?`${c.lat}, ${c.lng}`:'-'}</p>{c.lat&&c.lng&&<a className="btn s" target="_blank" href={`https://www.google.com/maps?q=${c.lat},${c.lng}`}>Lihat di Google Maps ›</a>}</div></div>
-  <div className="stk"><div className="card" style={{background:cardBg}}><h3 style={{color:cardText}}>Detail Pengaduan</h3>{[['ID',c.kode],['Kategori',c.kategori],['Judul',c.judul],['Deskripsi',c.deskripsi],['Tanggal',tgl(c.created_at)],['Lokasi',c.lokasi]].map(([k,v])=><p key={k} style={{color:cardSub}}><span style={{color:cardText}}>{k}</span><br/>{v}</p>)}<St s={c.urgensi} dark={dark}/></div>
-  <div className="card" style={{background:cardBg}}><h3 style={{color:cardText}}>Petugas yang Menangani</h3><p style={{color:cardSub}}>{c.petugas_nama?`👷 ${c.petugas_nama} — Petugas Lapangan`:'Belum ada petugas ditugaskan.'}</p></div></div></div>}
+ if(!kode)return<div className="card tr-empty"><div className="tr-empty-ic">📍</div><h2>Tracking Pengaduan</h2><p className="mu">{list.length?'Memuat...':'Anda belum memiliki pengaduan untuk dilacak.'}</p><Link className="btn s" to="/app/buat">➕ Buat Pengaduan</Link></div>;
+ if(!c)return<p>Memuat...</p>;
+ const flow=['Diterima','Diverifikasi','Diprioritaskan','Ditugaskan','Dalam Perbaikan','Selesai'],rejected=c.status==='Ditolak',idx=flow.indexOf(c.status);
+ const when=s=>{const l=(c.logs||[]).find(x=>x.status===s);return l?tgl(l.created_at):'-'};
+ const progress=rejected?0:Math.round(((idx+1)/flow.length)*100);
+ const rejectNote=(c.logs||[]).find(x=>x.status==='Ditolak')?.catatan;
+ return<div className="grid2 tr-page">
+  <div className="stk">
+   <header className="tr-hero">
+    <Link to="/app/riwayat" className="tr-back">← Kembali ke Riwayat</Link>
+    <span className="tr-eyebrow">📍 Tracking Pengaduan</span>
+    <h2>Pantau Progres Pengaduan Anda</h2>
+    <p>Ikuti setiap tahap penanganan laporan secara transparan dan real-time.</p>
+    <div className="tr-hero-meta">
+     <span className="tr-meta-item">Kode <b>{c.kode}</b></span>
+     <span className="tr-meta-item">Dibuat <b>{tgl(c.created_at)}</b></span>
+     <span className={'tr-status '+slug(c.status)}><i/>{c.status}</span>
+    </div>
+   </header>
+
+   <section className="card tr-card tr-summary">
+    {c.foto?<img src={c.foto} alt={c.judul} className="tr-photo"/>:<div className="tr-photo tr-photo-ph">🏗️</div>}
+    <div className="tr-summary-body">
+     <span className="tr-kode">{c.kode}</span>
+     <h3 className="tr-title">{c.judul}</h3>
+     <div className="tr-meta"><span>🏷️ {c.kategori}</span><span>📍 {c.lokasi}</span><span>🗓️ {tgl(c.created_at)}</span></div>
+     <div className="tr-badges"><St s={c.urgensi} dark={dark}/></div>
+    </div>
+   </section>
+
+   <section className="card tr-card tr-progress-card">
+    <div className="tr-progress-head">
+     <div><h3>Progres Penanganan</h3><p>Tahapan yang sudah dan sedang berlangsung</p></div>
+     <span className="tr-progress-pct">{progress}%</span>
+    </div>
+    <div className="tr-progress-bar"><i style={{width:progress+'%'}}/></div>
+    <ol className="tr-steps">
+     {flow.map((s,i)=>{const done=!rejected&&i<idx,active=!rejected&&i===idx,date=when(s);return<li key={s} className={'tr-step'+(done?' done':'')+(active?' active':'')}><span className="tr-step-dot">{done?'✓':i+1}</span><span className="tr-step-text"><b>{s}</b>{date!=='-'&&<small>{date}</small>}</span></li>})}
+    </ol>
+   </section>
+
+   {rejected&&<div className="tr-alert"><span className="tr-alert-ic">⚠️</span><div><b>Pengaduan ditolak</b><p>{rejectNote||'Pengaduan ini ditolak. Silakan hubungi petugas atau buat pengaduan baru dengan informasi yang lebih lengkap.'}</p></div></div>}
+
+   <section className="card tr-card">
+    <div className="tr-card-head"><div><h3>Lokasi Pengaduan</h3><p>Titik lokasi yang Anda laporkan</p></div><span className="tr-card-ic">🗺️</span></div>
+    <p className="tr-loc">📍 {c.lokasi}</p>
+    <p className="tr-coord">Koordinat: {c.lat&&c.lng?`${c.lat}, ${c.lng}`:'Belum tersedia'}</p>
+    {c.lat&&c.lng&&<a className="tr-action" target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${c.lat},${c.lng}`}>Buka di Google Maps <span>↗</span></a>}
+   </section>
+  </div>
+
+  <div className="stk">
+   <section className="card tr-side">
+    <div className="tr-card-head"><div><h3>Detail Pengaduan</h3><p>Informasi laporan Anda</p></div></div>
+    <div className="tr-detail">
+     {[['ID Pengaduan',c.kode],['Kategori',c.kategori],['Tanggal',tgl(c.created_at)],['Lokasi',c.lokasi]].map(([k,v])=><div className="tr-detail-row" key={k}><span>{k}</span><b>{v}</b></div>)}
+     <div className="tr-detail-row"><span>Urgensi</span><St s={c.urgensi} dark={dark}/></div>
+    </div>
+    <div className="tr-desc"><span>Deskripsi</span><p>{c.deskripsi}</p></div>
+   </section>
+
+   <section className="card tr-side">
+    <h3>Petugas yang Menangani</h3>
+    <div className="tr-officer"><div className="tr-officer-av">👷</div><div>{c.petugas_nama?<><b>{c.petugas_nama}</b><span>Petugas Lapangan</span></>:<><b>Belum ditugaskan</b><span>Menunggu penugasan dari admin</span></>}</div></div>
+   </section>
+
+   <section className="card tr-side">
+    <h3>Bantuan</h3>
+    <p className="tr-help">Status diperbarui oleh petugas setiap kali ada tindak lanjut. Simpan kode pengaduan Anda untuk memudahkan pengecekan.</p>
+   </section>
+  </div>
+ </div>}
 
 function Riwayat(){
  const loc=useLocation();
