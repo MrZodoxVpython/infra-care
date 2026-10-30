@@ -263,7 +263,7 @@ function Dashboard(){
     </div>
 
     <div className="d-map" style={{background:cardBg}}>
-     <div className="d-section-head"><h3 style={{color:cardText}}>Sebaran Pengaduan</h3><Link to="/app/peta" style={{color:'var(--b)',fontSize:13}}>Lihat Semua →</Link></div>
+     <div className="d-section-head"><h3 style={{color:cardText}}>Sebaran Pengaduan</h3><Link to={m?'/app/riwayat':'/app/peta'} style={{color:'var(--b)',fontSize:13}}>Lihat Semua →</Link></div>
       <div className="d-map-placeholder" style={{height:'200px',border:'1px solid #edf3fb',borderRadius:12,overflow:'hidden',marginTop:8}}>
         <MapContainer center={[-7.0292, 112.7461]} zoom={12} style={{height:'100%',width:'100%'}}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution='&copy; OpenStreetMap contributors'/>
