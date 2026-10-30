@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useRef,useState} from 'react';
 import {Routes,Route,Navigate,Link,NavLink,useNavigate,useParams,Outlet,useLocation} from 'react-router-dom';
 import {api,getUser,tgl,slug} from './api.js';
 import L from 'leaflet';
@@ -150,6 +150,20 @@ function Layout(){
    return()=>{window.removeEventListener('notif:refresh',onRefresh);window.removeEventListener('user:refresh',syncUser);};
  },[loc]);
  useEffect(()=>{(async()=>{try{const me=await api('/auth/me');setU(me);localStorage.setItem('user',JSON.stringify(me));}catch(_){if(!localStorage.getItem('token')){localStorage.removeItem('user');nav('/login')}}})();},[loc.pathname]);
+ const [searchQ,setSearchQ]=useState(''),[searchRows,setSearchRows]=useState([]),[searchOpen,setSearchOpen]=useState(false),[searchBusy,setSearchBusy]=useState(false);
+ const searchRef=useRef(null);
+ useEffect(()=>{
+  const term=searchQ.trim();
+  if(!term){setSearchRows([]);setSearchBusy(false);return;}
+  let alive=true;setSearchBusy(true);
+  const t=setTimeout(async()=>{try{const d=await api('/complaints?q='+encodeURIComponent(term));if(alive)setSearchRows(d.slice(0,6))}catch(_){if(alive)setSearchRows([])}finally{if(alive)setSearchBusy(false)}},300);
+  return()=>{alive=false;clearTimeout(t)};
+ },[searchQ]);
+ useEffect(()=>{
+  const onDown=e=>{if(searchRef.current&&!searchRef.current.contains(e.target))setSearchOpen(false)};
+  document.addEventListener('mousedown',onDown);
+  return()=>document.removeEventListener('mousedown',onDown);
+ },[]);
  if(!u?.id)return<Navigate to="/login"/>;
  const out=()=>{localStorage.clear();nav('/')};
   const [menuOpen,setMenuOpen]=useState(false);
@@ -158,7 +172,7 @@ function Layout(){
  return<div className="app"><aside className="side"><div className="s-logo"><Logo/></div><div className="s-user"><Avatar/><div><b>Halo, {u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div></div>
   {MENU[u.role].map(([to,l,ic])=><NavLink key={to} to={to} end={to==='/app'} className={({isActive})=>isActive?'s-item on':'s-item'}>{ic} {l}{l==='Notifikasi'&&n>0&&<span className="s-badge">{n}</span>}</NavLink>)}
    <div className="s-quote">Infrastruktur baik untuk masa depan kita bersama ♡</div></aside>
-  <div className="app-body"><div className="top"><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..."/><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
+  <div className="app-body"><div className="top"><div className="top-search" ref={searchRef}><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..." value={searchQ} onChange={e=>{setSearchQ(e.target.value);setSearchOpen(true)}} onFocus={()=>{if(searchQ.trim())setSearchOpen(true)}} onKeyDown={e=>{if(e.key==='Enter'&&searchRows[0]){e.preventDefault();setSearchOpen(false);setSearchQ('');nav('/app/tracking/'+searchRows[0].kode)}else if(e.key==='Escape'){setSearchOpen(false)}}} aria-label="Cari pengaduan, nomor laporan, atau kategori" aria-expanded={searchOpen&&!!searchQ.trim()}/>{searchOpen&&searchQ.trim()&&<div className="top-search-drop">{searchRows.map(r=><Link key={r.id} className="top-search-item" to={'/app/tracking/'+r.kode} onClick={()=>{setSearchOpen(false);setSearchQ('')}}><span className="top-search-ic">📄</span><span style={{minWidth:0,flex:1}}><b>{r.judul}</b><small>{r.kode} · {r.kategori} · {r.status}</small></span></Link>)}{!searchRows.length&&<div className="top-search-empty">{searchBusy?'Mencari…':'Tidak ada pengaduan yang cocok.'}</div>}{searchRows.length>0&&<div className="top-search-foot">↵ Enter untuk membuka hasil teratas</div>}</div>}</div><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
 
 function Table({rows,admin,onChange,compact,dark,highlightFn,variant}){
  const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#edf3fb';const headBg=dark?'#0f172a':'#f9fbfd';

@@ -52,6 +52,27 @@ html.dark .top-dropdown-item:hover{background:#334155}
 html.dark .top{background:#0f172a;box-shadow:0 2px 10px rgba(0,0,0,.4)}
 html.dark .u-prof{background:#1e293b;border-color:var(--bd2)}
 html.dark .u-prof:hover{background:#334155}
+/* pencarian global topbar */
+.top-search{position:relative;flex:1;min-width:0;max-width:560px}
+.top-search .in{max-width:100%}
+.top-search-drop{position:absolute;left:0;right:0;top:calc(100% + 8px);background:#fff;border:1px solid var(--bd2);border-radius:14px;box-shadow:0 10px 30px rgba(30,90,180,.14);z-index:60;overflow:hidden;max-height:360px;overflow-y:auto}
+.top-search-item{display:flex;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid #edf3fb;color:var(--tx);text-decoration:none}
+.top-search-item:last-child{border-bottom:0}
+.top-search-item:hover,.top-search-item:focus{background:#f5f9ff;outline:none}
+.top-search-item b{display:block;font-size:13px;color:var(--tx);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-search-item small{display:block;font-size:12px;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.top-search-ic{width:34px;height:34px;border-radius:10px;background:#eaf2fd;color:var(--b);display:grid;place-items:center;flex-shrink:0;font-size:15px}
+.top-search-empty{padding:16px 14px;color:var(--mu);font-size:13px;text-align:center}
+.top-search-foot{padding:8px 14px;font-size:11px;color:var(--mu);background:#f9fbfd;border-top:1px solid #edf3fb}
+html.dark .top-search-drop{background:#1e293b;border-color:#334155;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+html.dark .top-search-item{border-bottom-color:#334155;color:#e2e8f0}
+html.dark .top-search-item:hover,html.dark .top-search-item:focus{background:#334155}
+html.dark .top-search-item b{color:#e2e8f0}
+html.dark .top-search-item small{color:#94a3b8}
+html.dark .top-search-ic{background:#0f172a;color:#60a5fa}
+html.dark .top-search-empty{color:#94a3b8}
+html.dark .top-search-foot{background:#0f172a;border-top-color:#334155;color:#94a3b8}
+@media(max-width:640px){.top-search{max-width:none}}
 
 /* Dashboard baru */
 .d-banner{background:url('/banner-bg.jpg') no-repeat center center/cover;background-size:cover;border-radius:24px;padding:26px 32px;margin-bottom:20px;display:flex;gap:30px;align-items:center;flex-wrap:wrap;box-shadow:0 4px 18px rgba(30,90,180,.08)}
