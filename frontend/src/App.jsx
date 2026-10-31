@@ -164,6 +164,17 @@ function Layout(){
   document.addEventListener('mousedown',onDown);
   return()=>document.removeEventListener('mousedown',onDown);
  },[]);
+ const [mOpen,setMOpen]=useState(false);
+ const mMenuRef=useRef(null);
+ useEffect(()=>{setMOpen(false)},[loc.pathname]);
+ useEffect(()=>{
+  if(!mOpen)return;
+  const onDown=e=>{if(mMenuRef.current&&!mMenuRef.current.contains(e.target))setMOpen(false)};
+  const onKey=e=>{if(e.key==='Escape')setMOpen(false)};
+  document.addEventListener('pointerdown',onDown);
+  document.addEventListener('keydown',onKey);
+  return()=>{document.removeEventListener('pointerdown',onDown);document.removeEventListener('keydown',onKey)};
+ },[mOpen]);
  if(!u?.id)return<Navigate to="/login"/>;
  const out=()=>{localStorage.clear();nav('/')};
   const [menuOpen,setMenuOpen]=useState(false);
@@ -172,7 +183,14 @@ function Layout(){
  return<div className="app"><aside className="side"><div className="s-logo"><Logo/></div><div className="s-user"><Avatar/><div><b>Halo, {u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div></div>
   {MENU[u.role].map(([to,l,ic])=><NavLink key={to} to={to} end={to==='/app'} className={({isActive})=>isActive?'s-item on':'s-item'}>{ic} {l}{l==='Notifikasi'&&n>0&&<span className="s-badge">{n}</span>}</NavLink>)}
    <div className="s-quote">Infrastruktur baik untuk masa depan kita bersama ♡</div></aside>
-  <div className="app-body"><div className="top"><div className="top-search" ref={searchRef}><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..." value={searchQ} onChange={e=>{setSearchQ(e.target.value);setSearchOpen(true)}} onFocus={()=>{if(searchQ.trim())setSearchOpen(true)}} onKeyDown={e=>{if(e.key==='Enter'&&searchRows[0]){e.preventDefault();setSearchOpen(false);setSearchQ('');nav('/app/tracking/'+searchRows[0].kode)}else if(e.key==='Escape'){setSearchOpen(false)}}} aria-label="Cari pengaduan, nomor laporan, atau kategori" aria-expanded={searchOpen&&!!searchQ.trim()}/>{searchOpen&&searchQ.trim()&&<div className="top-search-drop">{searchRows.map(r=><Link key={r.id} className="top-search-item" to={'/app/tracking/'+r.kode} onClick={()=>{setSearchOpen(false);setSearchQ('')}}><span className="top-search-ic">📄</span><span style={{minWidth:0,flex:1}}><b>{r.judul}</b><small>{r.kode} · {r.kategori} · {r.status}</small></span></Link>)}{!searchRows.length&&<div className="top-search-empty">{searchBusy?'Mencari…':'Tidak ada pengaduan yang cocok.'}</div>}{searchRows.length>0&&<div className="top-search-foot">↵ Enter untuk membuka hasil teratas</div>}</div>}</div><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
+  <div className="app-body"><div className="top"><div className="m-menu-wrap" ref={mMenuRef}>
+    <button type="button" className="m-menu-btn" aria-label={mOpen?'Tutup menu':'Buka menu'} aria-expanded={mOpen} aria-controls="mobile-nav" onClick={()=>setMOpen(v=>!v)}>{mOpen?'✕':'☰'}</button>
+    {mOpen&&<nav id="mobile-nav" className="m-nav" aria-label="Menu navigasi utama">
+     <div className="m-nav-user"><Avatar/><div><b>{u.nama}</b><span>{ROLE[u.role]}</span></div></div>
+     {MENU[u.role].map(([to,l,ic])=><NavLink key={to} to={to} end={to==='/app'} className={({isActive})=>isActive?'m-nav-item on':'m-nav-item'} onClick={()=>setMOpen(false)}>{ic} <span>{l}</span>{l==='Notifikasi'&&n>0&&<span className="s-badge">{n}</span>}</NavLink>)}
+     <button type="button" className="m-nav-logout" onClick={out}>🚪 <span>Keluar</span></button>
+    </nav>}
+   </div><div className="top-search" ref={searchRef}><input className="in" placeholder="Cari pengaduan, nomor laporan, atau kategori..." value={searchQ} onChange={e=>{setSearchQ(e.target.value);setSearchOpen(true)}} onFocus={()=>{if(searchQ.trim())setSearchOpen(true)}} onKeyDown={e=>{if(e.key==='Enter'&&searchRows[0]){e.preventDefault();setSearchOpen(false);setSearchQ('');nav('/app/tracking/'+searchRows[0].kode)}else if(e.key==='Escape'){setSearchOpen(false)}}} aria-label="Cari pengaduan, nomor laporan, atau kategori" aria-expanded={searchOpen&&!!searchQ.trim()}/>{searchOpen&&searchQ.trim()&&<div className="top-search-drop">{searchRows.map(r=><Link key={r.id} className="top-search-item" to={'/app/tracking/'+r.kode} onClick={()=>{setSearchOpen(false);setSearchQ('')}}><span className="top-search-ic">📄</span><span style={{minWidth:0,flex:1}}><b>{r.judul}</b><small>{r.kode} · {r.kategori} · {r.status}</small></span></Link>)}{!searchRows.length&&<div className="top-search-empty">{searchBusy?'Mencari…':'Tidak ada pengaduan yang cocok.'}</div>}{searchRows.length>0&&<div className="top-search-foot">↵ Enter untuk membuka hasil teratas</div>}</div>}</div><div className="r"><ThemeToggle dark={dark} onToggle={()=>setDark(!dark)}/><span className="notif">🔔 {n}</span><div className="u-prof" onClick={()=>setMenuOpen(!menuOpen)} style={{cursor:'pointer'}}><Avatar small/><div className="u-meta"><b>{u.nama}</b><br/><span className="mu" style={{fontSize:12,opacity:0.8}}>{ROLE[u.role]}</span></div><span>▾</span>{menuOpen&&<div className="top-dropdown"><a onClick={out} className="top-dropdown-item">🚪 Keluar</a></div>}</div></div></div><div className="main" style={{flex:1,overflow:'auto',padding:'20px 26px'}}><Outlet/></div></div></div>}
 
 function Table({rows,admin,onChange,compact,dark,highlightFn,variant}){
  const tBg=dark?'#1e293b':'#fff';const tTxt=dark?'#e2e8f0':'#14306b';const tSub=dark?'#94a3b8':'#6b7fa6';const tBorder=dark?'#334155':'#edf3fb';const headBg=dark?'#0f172a':'#f9fbfd';
