@@ -1,7 +1,7 @@
-# INFRA-CARE
+# LAPOR-BUN
 Sistem Pengaduan Infrastruktur Publik — Node.js (Express) + React (Vite) + PostgreSQL.
 
-## Menjalankan
+## Start
 1. Buat database: `createdb infracare`
 2. Backend:
    ```
