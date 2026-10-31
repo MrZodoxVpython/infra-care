@@ -13,29 +13,9 @@ Sistem Pengaduan Infrastruktur Publik — Node.js (Express) + React (Vite) + Pos
    cd frontend && npm install && npm run dev      # http://localhost:5173
    ```
 
-## Akun demo (password: `password123`)
-- Masyarakat: yeni@infracare.id
-- Admin Pemerintah: budi@infracare.id
-- Petugas Lapangan: andi@infracare.id
+## Akun demo
+- Masyarakat: masyarakat@infracare.id
+- Admin Pemerintah: laporbun.id
+- Petugas Lapangan: laporbun.id
 
-## Alat bantu AI (OpenCode)
-
-Paket instruksi ada di `.opencode/` dan `AGENTS.md`:
-
-- Skill: `ui-design-system`, `feature-delivery`, `ui-verify`, `deploy-verify`, `security-baseline`, `codebase-map`, `auth-rbac`, `form-ux`, `performance-audit`, `e2e-playwright`.
-- Agent: `designer` (implementasi), `qa` (verifikasi read-only), `reviewer` (review read-only).
-- Command: `/verify`, `/ship`, `/audit-ui`.
-- MCP Playwright untuk verifikasi visual. Sekali saja:
-  ```
-  npx --yes @playwright/mcp install-browser chrome-for-testing
-  ```
-
-Verifikasi tanpa AI:
-
-```
-npm --prefix frontend run build
-node .opencode/skills/ui-verify/scripts/check-ui.mjs .
-bash .opencode/skills/security-baseline/scripts/check-secrets.sh
-bash .opencode/skills/performance-audit/scripts/bundle-report.sh
-bash .opencode/skills/deploy-verify/scripts/verify-deploy.sh
 ```
